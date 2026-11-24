@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>カロタスは新しいURLに移りました</title>
+<link rel="canonical" href="https://calotas.web.app/">
+<link rel="icon" type="image/png" sizes="32x32" href="https://calotas.web.app/icons/icon-32.png">
+<style>
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif; background: Canvas; color: CanvasText; }
+  main { max-width: 440px; margin: 18vh auto 0; padding: 0 24px; line-height: 1.7; }
+  h1 { font-size: 20px; margin: 0 0 10px; }
+  a.go { display: inline-block; margin-top: 6px; font-weight: 700; color: #d8473a; }
+  button { margin-top: 12px; border: 0; border-radius: 10px; padding: 12px 18px; background: #d8473a; color: #fff; font-weight: 700; font-size: 15px; }
+  .note { font-size: 14px; opacity: .8; }
+</style>
+</head>
+<body>
+<main>
+  <h1>カロタスのPC版は、新しいURLに移りました</h1>
+  <p><a class="go" href="https://calotas.web.app/">https://calotas.web.app/</a></p>
+  <p class="note" id="auto">自動で移動します…</p>
+  <div id="local" hidden>
+    <p class="note">このブラウザには、アカウントにログインしていない記録が残っています。新しいURLでも使うには、下のボタンでバックアップを書き出し、新しいURLの「設定 → バックアップから戻す」で読み込んでください。</p>
+    <button type="button" id="dl">バックアップを書き出す</button>
+  </div>
+</main>
+<script>
+(function () {
+  var NEW = 'https://calotas.web.app/';
+  var data = null, acct = null;
+  try { data = localStorage.getItem('habit-kcal-v1'); acct = localStorage.getItem('calotas-account'); } catch (e) {}
+  if (data && !acct) {
+    document.getElementById('auto').hidden = true;
+    document.getElementById('local').hidden = false;
+    document.getElementById('dl').onclick = function () {
+      var d = JSON.parse(data);
+      var out = JSON.stringify({ app: 'habit-kcal', v: 2, exportedAt: new Date().toISOString(), core: d.core, months: d.months, todo: d.todo, comps: d.comps, logins: d.logins || {} });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([out], { type: 'application/json' }));
+      a.download = 'calotas-backup.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    };
+    return;
+  }
+  location.replace(NEW);
+})();
+</script>
+</body>
+</html>

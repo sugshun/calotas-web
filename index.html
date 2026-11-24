@@ -3735,7 +3735,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   const FIRE_TOKEN = 'https://securetoken.googleapis.com/v1/token';
   const FIRE_DB = 'https://firestore.googleapis.com/v1/projects/' + FIRE.projectId + '/databases/(default)/documents';
   const FIRE_NAME = 'projects/' + FIRE.projectId + '/databases/(default)/documents';
-  const PC_URL = 'https://sugshun.github.io/calotas-web/';
+  const PC_URL = 'https://calotas.web.app/';
 
   const Account = {
     KEY: 'calotas-account',
@@ -5909,7 +5909,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     if (Native.on) { await bootDevice(); return; }
     let cloudOk = false;
     let triedCloud = false;
-    const cl = /(^|\.)github\.io$/.test(location.hostname) ? null : await waitForClaude(1200);
+    const cl = /(^|\.)(github\.io|web\.app|firebaseapp\.com)$/.test(location.hostname) ? null : await waitForClaude(1200);
     if (cl) {
       try {
         const got = await Promise.all([cl.use('db'), cl.use('user'), cl.use('downloads').catch(() => null)]);

@@ -1,0 +1,24 @@
+name: Firebase Hosting に公開
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/182928285479/locations/global/workloadIdentityPools/github/providers/calotas-web
+          service_account: hosting-deploy@calotas.iam.gserviceaccount.com
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npx --yes firebase-tools@latest deploy --only hosting --project calotas --non-interactive
