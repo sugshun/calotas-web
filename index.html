@@ -782,6 +782,13 @@ textarea.input { min-height: 120px; font-family: ui-monospace, Menlo, monospace;
 body.has-fab .toast { bottom: calc(146px + env(safe-area-inset-bottom)); }
 body.sheet-open .toast { bottom: calc(20px + env(safe-area-inset-bottom)); }
 .toast button { flex: none; background: none; border: 0; color: #ff8a7d; font-weight: 800; padding: 4px; }
+/* ログインボーナス：金色の帯で少しだけ目立たせる */
+.toast.bonus { background: #3a2a0c; color: #ffe2a8; font-weight: 700; box-shadow: 0 8px 24px rgba(168, 109, 16, 0.35); }
+.toast.bonus::before { content: ''; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--kin-bright); box-shadow: 0 0 0 4px rgba(240, 165, 54, 0.25); }
+@media (prefers-reduced-motion: no-preference) {
+  .toast.bonus.show::before { animation: bonus-pulse 1.2s ease-out 2; }
+}
+@keyframes bonus-pulse { 0% { box-shadow: 0 0 0 0 rgba(240, 165, 54, 0.6); } 100% { box-shadow: 0 0 0 10px rgba(240, 165, 54, 0); } }
 
 /* ===== ToDo ===== */
 .ttabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; margin: 0 -20px; padding: 10px 20px 4px; }
@@ -1061,6 +1068,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
    *     使わなかった報酬は貯金、使わなかった引き出しは返金（A-5, A-8）。
    *     基本カロリーの未使用分は貯金しない。
    *     食事データがなく未確認の日は精算を保留（A-14）
+   *  ログインボーナス（設定の login）：その日にアプリを開いた日だけ、基本カロリーが入る。開かなかった日は 0
    *  過去の修正で、すでに引き出した分の元手が足りなくなったときは残高がマイナスになる（A-12）
    */
   function computeLedger(data, idx, today) {
@@ -1093,19 +1101,22 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       const meals = idx.mealsByDate.get(d) || [];
       let M = 0;
       for (const m of meals) M += m.kcal;
+      const login = !!s.login;
+      const logged = !login || !!(data.logins && data.logins[d]);
+      const base = logged ? s.base : 0;
       const hasMeals = meals.length > 0;
       const confirmed = !!data.confirmed[d];
       const balStart = bal;
       bal += X;
       const balBeforeW = bal;
       bal -= W;
-      const budgetPre = s.base + Rin + W;
+      const budgetPre = base + Rin + W;
       const over = Math.max(0, M - budgetPre);
       const A = Math.min(over, Math.max(0, bal));
       bal -= A;
       const budget = budgetPre + A;
       const remaining = budget - M;
-      const beyondBase = Math.max(0, M - s.base);
+      const beyondBase = Math.max(0, M - base);
       const unusedReward = Rin - Math.min(Rin, beyondBase);
       const unusedW = W - Math.min(W, Math.max(0, beyondBase - Rin));
       const closed = d < today;
@@ -1120,7 +1131,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         if (pend > 0) { pending += pend; pendingDays.push(d); }
       }
       days[d] = {
-        date: d, base: s.base, cap, noCap: s.cap == null, R, Rh, Rt, Rin, X, W, A, M, over, budget, remaining,
+        date: d, base, baseSet: s.base, login, logged, cap, noCap: s.cap == null, R, Rh, Rt, Rin, X, W, A, M, over, budget, remaining,
         uncovered: Math.max(0, -remaining), hasMeals, confirmed, closed, settled,
         unusedReward, unusedW, D, F, pend, balStart, balBeforeW, balEnd: bal,
         mealCount: meals.length, entryCount: ents.length, compCount: comps.length,
@@ -1133,9 +1144,10 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   /** 台帳に載らない日（記録開始前・未来）用の空の日 */
   function emptyDay(core, date, today) {
     const s = settingsAt(core, date);
+    const base = s.login ? 0 : s.base;
     return {
-      date, base: s.base, cap: capOf(s), noCap: s.cap == null, R: 0, Rh: 0, Rt: 0, Rin: 0, X: 0, W: 0, A: 0, M: 0, over: 0, compCount: 0,
-      budget: s.base, remaining: s.base, uncovered: 0, hasMeals: false, confirmed: false,
+      date, base, baseSet: s.base, login: !!s.login, logged: !s.login, cap: capOf(s), noCap: s.cap == null, R: 0, Rh: 0, Rt: 0, Rin: 0, X: 0, W: 0, A: 0, M: 0, over: 0, compCount: 0,
+      budget: base, remaining: base, uncovered: 0, hasMeals: false, confirmed: false,
       closed: date < today, settled: false, unusedReward: 0, unusedW: 0, D: 0, F: 0, pend: 0,
       balStart: 0, balBeforeW: 0, balEnd: 0, mealCount: 0, entryCount: 0, outside: true,
     };
@@ -1473,14 +1485,14 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     return { core, entries, meals, withdrawals, confirmed, todo, completions };
   }
 
-  /** 新規利用（初回設定：基本カロリーと報酬上限だけ。仕様D-54） */
-  function makeEmpty(today, base, cap) {
+  /** 新規利用（初回設定：基本カロリーと報酬上限だけ。仕様D-54）。login：基本カロリーをログインボーナスにする */
+  function makeEmpty(today, base, cap, login) {
     return {
       core: {
         v: 1,
         startDate: today,
         settings: {
-          history: [{ from: today, base, cap }],
+          history: [{ from: today, base, cap, login: !!login }],
           closeTime: '00:00',
           reminder: { enabled: false, time: '21:00' },
         },
@@ -1883,7 +1895,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
 
   // ===================== 状態 =====================
   const App = {
-    data: null, // { core, months: { 'YYYY-MM': { entries, meals, withdrawals, confirmed } }, todo, comps: { 'YYYY-MM': { completions } } }
+    data: null, // { core, months: { 'YYYY-MM': { entries, meals, withdrawals, confirmed } }, todo, comps: { 'YYYY-MM': { completions } }, logins: { 'YYYY-MM': { days } } }
     sample: false,
     rev: 0,
     ui: { tab: 'home', viewDate: null, remainOpen: false, mealsOpen: false, histMonth: null, histSel: null },
@@ -1925,7 +1937,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     FILE: 'calotas-data.json',
     whole: true, // 1回の保存で全体を書く
     body() {
-      return JSON.stringify({ app: 'calotas', v: 3, savedAt: Date.now(), core: App.data.core, months: App.data.months, todo: App.data.todo, comps: App.data.comps });
+      return JSON.stringify({ app: 'calotas', v: 3, savedAt: Date.now(), core: App.data.core, months: App.data.months, todo: App.data.todo, comps: App.data.comps, logins: App.data.logins });
     },
     async read() {
       let file = null;
@@ -2072,7 +2084,9 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       Object.assign(confirmed, m.confirmed);
     }
     for (const k of Object.keys(App.data.comps || {})) for (const c of App.data.comps[k].completions) completions.push(c);
-    flatCache = { rev: App.rev, v: { core: App.data.core, entries, meals, withdrawals, confirmed, completions } };
+    const logins = {};
+    for (const k of Object.keys(App.data.logins || {})) for (const d of App.data.logins[k].days) logins[d] = true;
+    flatCache = { rev: App.rev, v: { core: App.data.core, entries, meals, withdrawals, confirmed, completions, logins } };
     return flatCache.v;
   }
   let ctxCache = { rev: -1, today: '', v: null };
@@ -2176,9 +2190,9 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       else delete m.confirmed[date];
       commit([E.monthKey(date)]);
     },
-    saveBudget(base, cap) {
+    saveBudget(base, cap, login) {
       const s = App.data.core.settings;
-      s.history = E.pushDated(s.history, today(), { base, cap });
+      s.history = E.pushDated(s.history, today(), { base, cap, login: !!login });
       commit(['core']);
     },
     setReminder(patch) {
@@ -2435,7 +2449,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   function breakdown(d, t, L, pot) {
     const row = (a, b, cls, rcls) => '<tr' + (rcls ? ' class="' + rcls + '"' : '') + '><td>' + a + '</td><td class="' + (cls || '') + '">' + b + '</td></tr>';
     const rows = [
-      row('基本カロリー', fmt(L.base)),
+      row(L.login ? (L.logged ? 'ログインボーナス（基本カロリー）' : 'ログインボーナス <small>（この日は開かなかったため 0）</small>') : '基本カロリー', fmt(L.base)),
       row('報酬 <small>（習慣 +' + fmt(L.Rh) + '・ToDo +' + fmt(L.Rt) + '、' + (L.noCap ? '上限なし' : '上限 ' + fmt(L.cap) + ' まで') + '）</small>', '+' + fmt(L.Rin), 'gold'),
     ];
     if (L.W) rows.push(row('貯金から引き出し', '+' + fmt(L.W), 'gold'));
@@ -3091,7 +3105,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       title: () => '初回設定',
       body() {
         return '<form data-form="setup" novalidate><p class="hint" style="margin-top:0">この2つだけで始められます。習慣や外部連携はあとからで大丈夫です。</p>' +
-          field('基本カロリー（1日）', '<div class="unit" data-unit="kcal"><input class="input big" id="su-base" inputmode="numeric" autocomplete="off" placeholder="例：1800" autofocus></div>', '習慣に関係なく毎日使える食事の予算です。0にすると、食事の予算をすべて習慣の報酬でまかなう使い方になります。あとから変更できます。', 'su-base') +
+          field('基本カロリー（1日）', '<div class="unit" data-unit="kcal"><input class="input big" id="su-base" inputmode="numeric" autocomplete="off" placeholder="例：1800" autofocus></div>', '毎日のログインボーナスです。その日はじめてアプリを開いたときに予算に入り、開かなかった日はもらえません。0にすると、食事の予算をすべて習慣の報酬でまかなう使い方になります。あとから変更できます。', 'su-base') +
           field('1日の報酬上限', '<div class="unit" data-unit="kcal"><input class="input big" id="su-cap" inputmode="numeric" autocomplete="off" placeholder="例：500"></div>', 'その日の予算に足せる報酬の上限です。超えた分は自動で貯金されます。基本カロリーを0にする場合は、1日に必要な分（例：2500）を入れるか、「上限なし」をオンにします。', 'su-cap') +
           noCapRow('su', false) +
           '<p class="hint bad" id="su-err" role="alert"></p><div class="btn-row"><button class="btn primary" type="submit">この設定で始める</button></div>' +
@@ -3107,11 +3121,12 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         const s = E.settingsAt(core, t);
         let html = '';
         html += '<section class="set-group"><h3>カロリー</h3><form class="set-card" data-form="budget" novalidate>' +
-          '<div class="set-row"><div><b><label for="sf-base">基本カロリー</label></b><p class="hint">習慣に関係なく毎日使える食事の予算。0にすると、すべて報酬でまかないます</p></div><div class="unit" data-unit="kcal"><input class="input" id="sf-base" inputmode="numeric" autocomplete="off" value="' + s.base + '"></div></div>' +
+          '<div class="set-row"><div><b><label for="sf-base">基本カロリー</label></b><p class="hint">' + (s.login ? 'その日はじめてアプリを開いたときに、ログインボーナスとして予算に入ります。' : '習慣に関係なく毎日使える食事の予算。') + '0にすると、すべて報酬でまかないます</p></div><div class="unit" data-unit="kcal"><input class="input" id="sf-base" inputmode="numeric" autocomplete="off" value="' + s.base + '"></div></div>' +
+          '<div class="set-row"><div><b id="sf-login-l">ログインボーナスにする</b><p class="hint">オンにすると、アプリを開かなかった日は基本カロリーがもらえません。</p></div><button type="button" class="switch" role="switch" aria-checked="' + !!s.login + '" aria-labelledby="sf-login-l" data-act="switchToggle"></button></div>' +
           '<div class="set-row"><div><b><label for="sf-cap">1日の報酬上限</label></b><p class="hint">その日の予算に足せる報酬の上限。超えた分は貯金' + capHint() + '</p></div><div class="unit" data-unit="kcal"><input class="input" id="sf-cap" inputmode="numeric" autocomplete="off"' + (s.cap == null ? ' value="" placeholder="なし" disabled' : ' value="' + s.cap + '"') + '></div></div>' +
           noCapRow('sf', s.cap == null) +
           '<div class="set-row"><p class="hint bad" id="sf-err" role="alert" style="margin:0"></p><button class="btn primary" type="submit">今日から適用</button></div></form>';
-        html += '<ul class="hist-list">' + core.settings.history.slice().reverse().map((x) => '<li><span>' + shortDate(x.from) + ' から</span><span>基本 ' + fmt(x.base) + ' ・ ' + (x.cap == null ? '上限なし' : '上限 ' + fmt(x.cap)) + '</span></li>').join('') + '</ul>';
+        html += '<ul class="hist-list">' + core.settings.history.slice().reverse().map((x) => '<li><span>' + shortDate(x.from) + ' から</span><span>基本 ' + fmt(x.base) + (x.login ? '（ログイン）' : '') + ' ・ ' + (x.cap == null ? '上限なし' : '上限 ' + fmt(x.cap)) + '</span></li>').join('') + '</ul>';
         html += '<p class="hint">変更は今日から反映され、過去の日の計算はそのまま残ります。</p></section>';
         html += '<section class="set-group"><h3>1日の区切り</h3><div class="set-card"><div class="set-row"><div><b><label for="sf-close">日次締め時刻</label></b><p class="hint">この時刻までの記録は前日分になります。使わなかった報酬の貯金と、引き出しの返金もこの時刻に行います。初期値は 0:00。</p></div>' +
           '<select class="input" id="sf-close" data-change="closeTime">' + closeOptions(core.settings.closeTime) + '</select></div></div></section>';
@@ -3311,11 +3326,19 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     c = c && typeof c === 'object' ? c : {};
     return { completions: Array.isArray(c.completions) ? c.completions : [] };
   }
-  /** 保存の単位：core（設定・習慣）、todo（タスク一式）、'YYYY-MM'（月の記録）、'c-YYYY-MM'（月のToDo完了記録） */
+  /** その月にアプリを開いた日（ログインボーナスを受け取った日） */
+  function normalizeLogins(l) {
+    const days = l && Array.isArray(l.days) ? l.days.filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)) : [];
+    return { days: Array.from(new Set(days)).sort() };
+  }
+  /** 開いた日は消えることがないので、2つの記録を合わせる */
+  function mergeLogins(a, b) { return normalizeLogins({ days: ((a && a.days) || []).concat((b && b.days) || []) }); }
+  /** 保存の単位：core（設定・習慣）、todo（タスク一式）、'YYYY-MM'（月の記録）、'c-YYYY-MM'（月のToDo完了記録）、'l-YYYY-MM'（月の開いた日） */
   function docBody(k) {
     if (k === 'core') return App.data.core;
     if (k === 'todo') return App.data.todo;
     if (k.indexOf('c-') === 0) return App.data.comps[k.slice(2)] || { completions: [] };
+    if (k.indexOf('l-') === 0) return App.data.logins[k.slice(2)] || { days: [] };
     return App.data.months[k] || emptyMonth();
   }
   function fromDocs(docs) {
@@ -3323,17 +3346,19 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     let todo = null;
     const months = {};
     const comps = {};
+    const logins = {};
     for (const d of docs) {
       if (d.id === 'core') core = normalizeCore(clone(d.data));
       else if (d.id === 'todo') todo = normalizeTodo(clone(d.data));
       else if (d.id.indexOf('c-') === 0) comps[d.id.slice(2)] = normalizeComps(clone(d.data));
+      else if (d.id.indexOf('l-') === 0) logins[d.id.slice(2)] = normalizeLogins(d.data);
       else if (d.id.indexOf('m-') === 0) {
         const m = clone(d.data);
         delete m._by; delete m._at;
         months[d.id.slice(2)] = normalizeMonth(m);
       }
     }
-    return core ? { core, months, todo: todo || E.emptyTodo(), comps } : null;
+    return core ? { core, months, todo: todo || E.emptyTodo(), comps, logins } : null;
   }
   function toDocs(f) {
     const months = {};
@@ -3347,10 +3372,15 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       const k = E.monthKey(c.date);
       (comps[k] || (comps[k] = { completions: [] })).completions.push(c);
     });
-    return { core: f.core, months, todo: f.todo || E.emptyTodo(), comps };
+    const logins = {};
+    Object.keys(f.logins || {}).forEach((d) => {
+      const k = E.monthKey(d);
+      (logins[k] || (logins[k] = { days: [] })).days.push(d);
+    });
+    return { core: f.core, months, todo: f.todo || E.emptyTodo(), comps, logins };
   }
   function allKeys() {
-    return ['core', 'todo'].concat(Object.keys(App.data.months), Object.keys(App.data.comps).map((k) => 'c-' + k));
+    return ['core', 'todo'].concat(Object.keys(App.data.months), Object.keys(App.data.comps).map((k) => 'c-' + k), Object.keys(App.data.logins).map((k) => 'l-' + k));
   }
 
   const Store = {
@@ -3453,7 +3483,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       }
     },
     async write() {
-      window.localStorage.setItem(this.KEY, JSON.stringify({ core: App.data.core, months: App.data.months, todo: App.data.todo, comps: App.data.comps }));
+      window.localStorage.setItem(this.KEY, JSON.stringify({ core: App.data.core, months: App.data.months, todo: App.data.todo, comps: App.data.comps, logins: App.data.logins }));
     },
     async clear() {
       try { window.localStorage.removeItem(this.KEY); } catch (e) { /* 無視 */ }
@@ -3464,9 +3494,9 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     col: null,
     tab: newId('tab'),
     known: new Set(),
-    docId(k) { return k === 'core' || k === 'todo' || k.indexOf('c-') === 0 ? k : 'm-' + k; },
+    docId(k) { return k === 'core' || k === 'todo' || k.indexOf('c-') === 0 || k.indexOf('l-') === 0 ? k : 'm-' + k; },
     keyOf(id) {
-      if (id === 'core' || id === 'todo' || id.indexOf('c-') === 0) return id;
+      if (id === 'core' || id === 'todo' || id.indexOf('c-') === 0 || id.indexOf('l-') === 0) return id;
       return id.indexOf('m-') === 0 ? id.slice(2) : null;
     },
     async write(k) {
@@ -3553,12 +3583,21 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         }
         if (k === 'todo') App.data.todo = E.emptyTodo();
         else if (k.indexOf('c-') === 0) delete App.data.comps[k.slice(2)];
+        else if (k.indexOf('l-') === 0) delete App.data.logins[k.slice(2)];
         else delete App.data.months[k];
         changed = true;
         continue;
       }
       const body = ch.doc.data();
       if (!body || body._by === Cloud.tab) continue; // この画面が書いたもの
+      if (k.indexOf('l-') === 0) {
+        const mk = k.slice(2);
+        const merged = mergeLogins(App.data.logins[mk], body);
+        if (merged.days.length > normalizeLogins(body).days.length) Store.markDirty(k); // こちらにしかない日を送り返す
+        App.data.logins[mk] = merged;
+        changed = true;
+        continue;
+      }
       if (Store.dirty.has(k)) continue;
       if (k === 'core') {
         const core = normalizeCore(clone(body));
@@ -3596,6 +3635,42 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     App.rev++;
   }
 
+  // ===================== ログインボーナス =====================
+  // その日はじめてアプリを開いたとき（画面が見えているとき）に、その日を「開いた日」として記録する。
+  // 設定がログインボーナスのとき、開いた日だけ基本カロリーが予算に入る（計算は engine.js）。
+  function hasLogin(date) {
+    const m = App.data.logins[E.monthKey(date)];
+    return !!(m && m.days.indexOf(date) >= 0);
+  }
+  /** 今日を「開いた日」にする。quiet なら知らせない（初回設定の直後など） */
+  function claimLogin(quiet) {
+    if (!App.data || App.sample || document.visibilityState === 'hidden') return;
+    const t = today();
+    if (hasLogin(t)) return;
+    const k = E.monthKey(t);
+    App.data.logins[k] = mergeLogins(App.data.logins[k], { days: [t] });
+    App.rev++;
+    Store.markDirty('l-' + k);
+    render();
+    if (!quiet) bonusToast();
+  }
+  function bonusToast() {
+    const t = today();
+    const s = E.settingsAt(App.data.core, t);
+    if (!s.login || !(s.base > 0) || !hasLogin(t)) return;
+    toast('ログインボーナス  基本カロリー +' + fmt(s.base) + ' kcal を受け取りました', null, 'bonus');
+  }
+  /** 前からのデータ：基本カロリーを今日からログインボーナスにする（ユーザーが一度も決めていないとき） */
+  function ensureLoginMode() {
+    if (!App.data || App.sample) return false;
+    const s = App.data.core.settings;
+    if (s.history.some((x) => 'login' in x)) return false;
+    s.history = E.pushDated(s.history, today(), { login: true });
+    App.rev++;
+    Store.markDirty('core');
+    return true;
+  }
+
   // ===================== アカウントと同期（Firebase） =====================
   // iPhoneアプリとPC（ブラウザ）で同じ記録を使うための部分。
   // ・ログイン：Firebase Authentication（メールアドレスとパスワード）を REST で呼ぶ
@@ -3619,6 +3694,10 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     expired: false, // ログインの期限が切れてログアウトした
     timer: null,
     usable() { return (Store.mode === 'device' || Store.mode === 'local') && !window.claude && !!FIRE.apiKey; },
+    /** 起動直後（読み込み前）でも、ログインしていそうかを手元の記録から判断する */
+    knownSignedIn() {
+      try { return !!window.localStorage.getItem(this.KEY); } catch (e) { return false; }
+    },
     async load() {
       let s = null;
       if (Native.on) {
@@ -3799,6 +3878,8 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     timer: null,
     poll: null,
     ver: {}, // 文書ごとの変更回数（送っている間にまた変わったかを見分ける）
+    firstDone: false, // 起動してから一度でも同期できたか
+    early: new Set(), // ログイン状態を読み込む前（起動直後）に変わった保存の単位
     choice: null, // { remote: data, docs }：どちらの記録を使うか選ぶとき
     setState(s, msg) {
       this.state = s;
@@ -3808,7 +3889,11 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     /** 手元の変更を記録して、少し待ってから送る */
     touch(k) {
       const st = Account.st;
-      if (!st || App.sample) return;
+      if (App.sample) return;
+      if (!st) {
+        if (Account.usable() && Account.knownSignedIn()) this.early.add(k); // 読み込んだあとで送る
+        return;
+      }
       const id = Cloud.docId(k);
       st.pending[id] = 'put';
       this.ver[id] = (this.ver[id] || 0) + 1;
@@ -3840,7 +3925,10 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     },
     start() {
       clearInterval(this.poll);
-      if (!Account.st || !Account.usable()) { this.state = 'off'; return; }
+      if (!Account.st || !Account.usable()) { this.state = 'off'; this.early.clear(); return; }
+      const early = Array.from(this.early);
+      this.early.clear();
+      for (const k of early) this.touch(k);
       this.poll = setInterval(() => { if (!document.hidden) this.run(); }, 45000);
       this.run();
     },
@@ -3863,6 +3951,11 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
           Account.st.lastOk = Date.now();
           Account.save();
           this.setState('ok');
+          if (!this.firstDone) {
+            this.firstDone = true;
+            // 前からのデータを今日からログインボーナスにする。最新の記録を受け取ってから行う（古い設定で上書きしない）
+            if (ensureLoginMode()) { render(); bonusToast(); }
+          }
         } catch (e) {
           this.fail(e);
         } finally {
@@ -3898,13 +3991,24 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       if (prev && prev[0] === d.ut) continue; // 受け取り済み
       noteSeen([d]);
       if (d.by === st.device) continue; // この端末が書いたもの
-      if (st.pending[d.id]) continue;
       const k = Cloud.keyOf(d.id);
       if (!k) continue;
+      if (k.indexOf('l-') === 0 && !d.del) {
+        let body;
+        try { body = JSON.parse(d.json); } catch (e) { continue; }
+        const mk = k.slice(2);
+        const merged = mergeLogins(App.data.logins[mk], body);
+        if (merged.days.length > normalizeLogins(body).days.length) { st.pending[d.id] = 'put'; Sync.ver[d.id] = (Sync.ver[d.id] || 0) + 1; } // こちらにしかない日を送り返す
+        if (merged.days.length !== ((App.data.logins[mk] && App.data.logins[mk].days.length) || 0)) changed = true;
+        App.data.logins[mk] = merged;
+        continue;
+      }
+      if (st.pending[d.id]) continue;
       if (d.del) {
         if (k === 'core') { reset = true; continue; }
         if (k === 'todo') App.data.todo = E.emptyTodo();
         else if (k.indexOf('c-') === 0) delete App.data.comps[k.slice(2)];
+        else if (k.indexOf('l-') === 0) delete App.data.logins[k.slice(2)];
         else delete App.data.months[k];
         changed = true;
         continue;
@@ -3961,6 +4065,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     render();
     refreshSheets();
     Notify.soon();
+    claimLogin(); // この端末で開いた今日の分
   }
   async function pushPending() {
     const st = Account.st;
@@ -4291,7 +4396,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
 
   // バックアップ
   function exportJson() {
-    return JSON.stringify({ app: 'habit-kcal', v: 2, exportedAt: new Date().toISOString(), core: App.data.core, months: App.data.months, todo: App.data.todo, comps: App.data.comps });
+    return JSON.stringify({ app: 'habit-kcal', v: 2, exportedAt: new Date().toISOString(), core: App.data.core, months: App.data.months, todo: App.data.todo, comps: App.data.comps, logins: App.data.logins });
   }
   function parseBackup(text) {
     let o;
@@ -4303,7 +4408,9 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     for (const k of Object.keys(o.months)) if (/^\d{4}-\d{2}$/.test(k)) months[k] = normalizeMonth(o.months[k]);
     const comps = {};
     for (const k of Object.keys(o.comps || {})) if (/^\d{4}-\d{2}$/.test(k)) comps[k] = normalizeComps(o.comps[k]);
-    return { core, months, todo: normalizeTodo(o.todo ? clone(o.todo) : null), comps };
+    const logins = {};
+    for (const k of Object.keys(o.logins || {})) if (/^\d{4}-\d{2}$/.test(k)) logins[k] = normalizeLogins(o.logins[k]);
+    return { core, months, todo: normalizeTodo(o.todo ? clone(o.todo) : null), comps, logins };
   }
   function importText(text) {
     const data = parseBackup(text);
@@ -5373,6 +5480,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     },
     settings() { openSheet('settings'); },
     toggleRemain() { App.ui.remainOpen = !App.ui.remainOpen; render(); },
+    switchToggle(el) { el.setAttribute('aria-checked', String(el.getAttribute('aria-checked') !== 'true')); },
     noCapToggle(el) {
       const on = el.getAttribute('aria-checked') !== 'true';
       el.setAttribute('aria-checked', String(on));
@@ -5619,10 +5727,12 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     budget(form, sh) {
       const base = toInt(form.querySelector('#sf-base').value);
       const cap = noCapOn(form) ? null : toInt(form.querySelector('#sf-cap').value);
+      const loginSw = form.querySelector('[aria-labelledby="sf-login-l"]');
+      const login = !!loginSw && loginSw.getAttribute('aria-checked') === 'true';
       const err = form.querySelector('#sf-err');
       const bad = budgetError(base, cap);
       if (bad) { err.textContent = bad; return; }
-      Act.saveBudget(base, cap);
+      Act.saveBudget(base, cap, login);
       fillSheet(sh);
       toast('今日から適用しました');
     },
@@ -5632,12 +5742,13 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       const err = form.querySelector('#su-err');
       const bad = budgetError(base, cap);
       if (bad) { err.textContent = bad; return; }
-      App.data = toDocs(E.makeEmpty(E.logicalDate(new Date(), '00:00'), base, cap));
+      App.data = toDocs(E.makeEmpty(E.logicalDate(new Date(), '00:00'), base, cap, true));
       App.sample = false;
       App.sync = { state: 'idle' };
       App.ui.viewDate = null;
       App.ui.tab = 'home';
       App.rev++;
+      claimLogin(true);
       closeAllSheets();
       render();
       pruneCloud().then(() => Store.writeAll());
@@ -5748,13 +5859,14 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   });
 
   let toastTimer = null;
-  function toast(msg, action) {
+  function toast(msg, action, kind) {
     const el = $('#toast');
     el.innerHTML = '<span>' + esc(msg) + '</span>' + (action ? '<button type="button">' + esc(action.label) + '</button>' : '');
     if (action) el.querySelector('button').onclick = () => { el.classList.remove('show'); action.fn(); };
+    el.classList.toggle('bonus', kind === 'bonus');
     el.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), action ? 5500 : 2800);
+    toastTimer = setTimeout(() => el.classList.remove('show'), action ? 5500 : kind === 'bonus' ? 4200 : 2800);
   }
 
   // ===================== 起動 =====================
@@ -5823,23 +5935,26 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     Sync.start();
   }
   function loadSaved(saved) {
-    const data = { core: normalizeCore(saved.core), months: {}, todo: normalizeTodo(saved.todo), comps: {} };
+    const data = { core: normalizeCore(saved.core), months: {}, todo: normalizeTodo(saved.todo), comps: {}, logins: {} };
     if (!data.core) return;
     for (const k of Object.keys(saved.months || {})) data.months[k] = normalizeMonth(saved.months[k]);
     for (const k of Object.keys(saved.comps || {})) data.comps[k] = normalizeComps(saved.comps[k]);
+    for (const k of Object.keys(saved.logins || {})) data.logins[k] = normalizeLogins(saved.logins[k]);
     App.data = data;
     App.rev++;
   }
   function started() {
     if (!App.data) enterSample();
+    if (!Account.usable() || !Account.knownSignedIn()) ensureLoginMode(); // ログイン中は、最初の同期のあとで
     render();
     hideSplash();
+    claimLogin();
     runSync(true);
     Notify.soon();
     let last = clockKey();
     const tick = () => {
       const k = clockKey();
-      if (k !== last) { last = k; render(); Notify.soon(); }
+      if (k !== last) { last = k; render(); Notify.soon(); claimLogin(); }
     };
     setInterval(tick, 20000);
     document.addEventListener('visibilitychange', () => {
@@ -5849,6 +5964,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         return;
       }
       tick();
+      claimLogin();
       Notify.soon();
       Sync.soon(300);
     });
