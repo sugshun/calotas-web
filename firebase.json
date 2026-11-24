@@ -1,12 +1,8 @@
 {
   "hosting": {
-    "public": ".",
+    "public": "_site",
     "ignore": [
-      "firebase.json",
-      "README.md",
-      "docs/**",
-      "**/.*",
-      "**/node_modules/**"
+      "**/.*"
     ],
     "headers": [
       {

@@ -14,6 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      # 公開するファイルだけを _site/ に集める
+      - run: |
+          mkdir _site
+          cp index.html manifest.webmanifest _site/
+          cp -r icons _site/
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: projects/182928285479/locations/global/workloadIdentityPools/github/providers/calotas-web
