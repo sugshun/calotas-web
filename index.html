@@ -218,6 +218,13 @@ body.scrolled .tb-title { opacity: 1; }
 
 /* ===== アカウントと同期 ===== */
 .acct-mail { word-break: break-all; }
+/* Googleでログイン：PCは Google の公式ボタン、iPhoneはアプリのボタン（押すと Google の画面が出る） */
+.g-wrap { display: flex; justify-content: center; align-items: center; min-height: 50px; margin: 18px 0 2px; transition: opacity 0.15s; }
+.g-wrap.busy { opacity: 0.45; pointer-events: none; }
+.g-web { display: flex; justify-content: center; width: 100%; max-width: 320px; min-height: 44px; }
+.btn.g-native { width: 100%; max-width: 320px; border-radius: 999px; background: transparent; border-color: var(--line-2); }
+.g-busy { text-align: center; min-height: 1.2em; margin: 6px 0 0; }
+.g-ok { color: var(--midori); font-weight: 700; }
 .acct-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 16px; margin-top: 12px; }
 .acct-links .link-btn { color: var(--shu-text); padding: 6px; }
 .choice { margin-top: 14px; }
@@ -3725,7 +3732,8 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
 
   // ===================== アカウントと同期（Firebase） =====================
   // iPhoneアプリとPC（ブラウザ）で同じ記録を使うための部分。
-  // ・ログイン：Firebase Authentication（メールアドレスとパスワード）を REST で呼ぶ
+  // ・ログイン：Googleでログイン（パスワードは使わない）。受け取った Google の ID トークンを
+  //   Firebase Authentication の signInWithIdp に REST で渡す
   // ・記録：Firestore の users/{uid}/docs/{id} に、保存の単位（core・todo・m-月・c-月）ごとに置く
   //   中身は JSON の文字列（json）、書いた端末（by）、消したしるし（del）、サーバーの時刻（at）
   // ・手元（iPhoneのファイル／ブラウザ）には今までどおり保存し、つながったときに送る・受け取る
@@ -3823,6 +3831,102 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   }
   function authPost(method, payload) {
     return fireFetch(FIRE_AUTH + method + '?key=' + FIRE.apiKey, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  }
+
+  // ---- Googleでログイン ----
+  // Web（PC）：Google の公式ボタン（Google Identity Services）で ID トークンを受け取る
+  // iPhone：アプリの中の画面では Google がログインを許可しないため、ネイティブの部品（SocialLogin）で受け取る
+  // クライアントIDは公開してよい識別子（秘密の鍵ではない）
+  const GOOGLE = {
+    web: '182928285479-5jf3rk26q27f4ba6b6o5vkkcdif2s0mm.apps.googleusercontent.com',
+    ios: '182928285479-62qat7jal32n8ri70ajpl443sjnqivc1.apps.googleusercontent.com',
+  };
+  function gErr(code) { const e = new Error(code); e.code = code; return e; }
+  const Google = {
+    gis: null, // 公式ボタンのスクリプトを読み込む Promise
+    gisInit: false,
+    handler: null, // いま開いている画面の受け取り口 { ok(tok), fail(e) }
+    native: null, // iPhone の部品の準備
+    loadGis() {
+      if (window.google && window.google.accounts && window.google.accounts.id) return Promise.resolve();
+      if (!this.gis) {
+        this.gis = new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://accounts.google.com/gsi/client';
+          s.async = true;
+          s.onload = () => (window.google && window.google.accounts && window.google.accounts.id ? resolve() : reject(gErr('GOOGLE_UNAVAILABLE')));
+          s.onerror = () => reject(gErr('GOOGLE_UNAVAILABLE'));
+          document.head.appendChild(s);
+        }).catch((e) => { this.gis = null; throw e; });
+      }
+      return this.gis;
+    },
+    /** Web：el に Google の公式ボタンを描く。ログインできたら handler.ok({ idToken }) */
+    async button(el, handler) {
+      this.handler = handler;
+      try {
+        await this.loadGis();
+      } catch (e) {
+        if (el.isConnected && this.handler === handler) handler.fail(e);
+        return;
+      }
+      if (!el.isConnected) return;
+      const id = window.google.accounts.id;
+      if (!this.gisInit) {
+        id.initialize({
+          client_id: GOOGLE.web,
+          callback: (resp) => { const h = this.handler; if (h && resp && resp.credential) h.ok({ idToken: resp.credential }); },
+          ux_mode: 'popup',
+          auto_select: false,
+          itp_support: true,
+          use_fedcm_for_button: true,
+        });
+        this.gisInit = true;
+      }
+      el.innerHTML = '';
+      id.renderButton(el, { type: 'standard', theme: 'outline', size: 'large', shape: 'pill', text: 'signin_with', logo_alignment: 'left', locale: 'ja', width: Math.max(220, Math.min(320, el.clientWidth || 280)) });
+    },
+    ensureNative() {
+      if (!this.native) {
+        this.native = Native.call('SocialLogin', 'initialize', { google: { iOSClientId: GOOGLE.ios, webClientId: GOOGLE.web, mode: 'online' } })
+          .catch((e) => { this.native = null; throw e; });
+      }
+      return this.native;
+    },
+    /** iPhone：Google のログイン画面を出して ID トークンを受け取る（choose なら前回のアカウントを使わず選んでもらう） */
+    async nativeToken(choose) {
+      await this.ensureNative();
+      const r = await Native.call('SocialLogin', 'login', { provider: 'google', options: choose ? { forcePrompt: true } : {} });
+      const tok = r && r.result && r.result.idToken;
+      if (!tok) throw gErr('GOOGLE_NO_TOKEN');
+      return { idToken: tok };
+    },
+    /** ログアウトしたとき：次は Google のアカウントを選び直せるようにする */
+    signOut() {
+      if (Native.on) this.ensureNative().then(() => Native.call('SocialLogin', 'logout', { provider: 'google' })).catch(() => { /* 選び直せなくても困らない */ });
+      try { if (window.google && window.google.accounts && window.google.accounts.id) window.google.accounts.id.disableAutoSelect(); } catch (e) { /* なくてよい */ }
+    },
+  };
+  /** Google の ID トークンの中身（メールアドレスなど）。署名の確認は Firebase が行う */
+  function tokenClaims(t) {
+    try {
+      const b = String(t).split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      const bin = atob(b + '==='.slice((b.length + 3) % 4));
+      return JSON.parse(decodeURIComponent(Array.prototype.map.call(bin, (c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
+    } catch (e) {
+      return {};
+    }
+  }
+  /** Google の ID トークンで Firebase にログインする（初めてなら、そのままアカウントができる） */
+  async function googleAuth(tok) {
+    const r = await authPost('signInWithIdp', {
+      postBody: 'id_token=' + encodeURIComponent(tok.idToken) + '&providerId=google.com',
+      requestUri: /^https?:$/.test(location.protocol) ? location.origin + '/' : 'http://localhost/',
+      returnSecureToken: true,
+      returnIdpCredential: true,
+    });
+    if (!r || !r.idToken || !r.localId) throw gErr(r && r.needConfirmation ? 'NEED_CONFIRMATION' : 'INVALID_IDP_RESPONSE');
+    return r;
   }
   async function idToken(force) {
     if (!Account.st) { const e = new Error('signed out'); e.code = 'SIGNED_OUT'; throw e; }
@@ -4144,10 +4248,10 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     }
   }
 
-  /** ログイン（create なら作成）。戻り値：'uploaded' | 'downloaded' | 'empty' | 'choose' */
-  async function signIn(email, password, create) {
-    const r = await authPost(create ? 'signUp' : 'signInWithPassword', { email, password, returnSecureToken: true });
-    Account.begin(r, email);
+  /** Googleでログインしたあと。戻り値：'uploaded' | 'downloaded' | 'empty' | 'choose' | 'later' */
+  async function signInGoogle(tok) {
+    const r = await googleAuth(tok);
+    Account.begin(r, r.email || tokenClaims(tok.idToken).email || '');
     return firstSync();
   }
   /** ログインした直後：アカウントとこの端末のどちらに記録があるかで、受け取る・送る・選んでもらう */
@@ -4207,33 +4311,31 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     Account.save();
     Sync.run();
   }
-  /** アカウントの削除：本人確認のためパスワードでログインし直し、記録を消してからアカウントを消す */
-  async function deleteAccount(password) {
+  /** アカウントの削除：直前にGoogleで本人確認した結果（fresh）を使い、記録を消してからアカウントを消す */
+  async function deleteAccount(fresh) {
     const st = Account.st;
-    const r = await authPost('signInWithPassword', { email: st.email, password, returnSecureToken: true });
-    Account.idToken = r.idToken;
-    Account.idExp = Date.now() + (Number(r.expiresIn || 3600) - 300) * 1000;
+    Account.idToken = fresh.idToken;
+    Account.idExp = Date.now() + (Number(fresh.expiresIn || 3600) - 300) * 1000;
     const docs = await pullDocs(true);
     for (let i = 0; i < docs.length; i += 100) {
       await dbPost(':commit', { writes: docs.slice(i, i + 100).map((d) => ({ delete: FIRE_NAME + '/users/' + st.uid + '/docs/' + d.id })) });
     }
-    await authPost('delete', { idToken: r.idToken });
+    await authPost('delete', { idToken: fresh.idToken });
     Sync.stop();
     Account.end();
+    Google.signOut();
   }
 
   const AUTH_MSG = {
-    EMAIL_EXISTS: 'このメールアドレスは、すでに登録されています。「ログイン」から入ってください。',
-    INVALID_LOGIN_CREDENTIALS: 'メールアドレスかパスワードが違います。',
-    INVALID_PASSWORD: 'パスワードが違います。',
-    EMAIL_NOT_FOUND: 'メールアドレスかパスワードが違います。',
-    INVALID_EMAIL: 'メールアドレスの形が正しくありません。',
-    WEAK_PASSWORD: 'パスワードは8文字以上にしてください。',
-    PASSWORD_DOES_NOT_MEET_REQUIREMENTS: 'パスワードが条件を満たしていません。8文字以上で、英字と数字を混ぜてください。',
-    MISSING_PASSWORD: 'パスワードを入力してください。',
+    INVALID_IDP_RESPONSE: 'Googleでのログインを確認できませんでした。もう一度お試しください。',
+    GOOGLE_NO_TOKEN: 'Googleからログインの情報を受け取れませんでした。もう一度お試しください。',
+    GOOGLE_UNAVAILABLE: 'Googleのログインを準備できませんでした。インターネットにつながっているか確認して、開き直してください。',
+    WRONG_ACCOUNT: 'ログイン中とは別のGoogleアカウントです。同じアカウントを選んでください。',
+    NEED_CONFIRMATION: 'このメールアドレスは別の方法で登録されています。',
+    CREDENTIAL_TOO_OLD_LOGIN_AGAIN: '確認してから時間がたちました。もう一度Googleで確認してください。',
     TOO_MANY_ATTEMPTS_TRY_LATER: '試した回数が多すぎます。しばらく待ってからやり直してください。',
     USER_DISABLED: 'このアカウントは使えなくなっています。',
-    OPERATION_NOT_ALLOWED: 'いまはこの方法でログインできません。',
+    OPERATION_NOT_ALLOWED: 'いまはGoogleでログインできません。',
     NETWORK: '通信できませんでした。インターネットにつながっているか確認してください。',
   };
   const authMessage = (e) => AUTH_MSG[e && e.code] || 'うまくいきませんでした（' + String((e && e.message) || 'エラー').slice(0, 60) + '）。';
@@ -4255,7 +4357,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     const st = Account.st;
     let html = '<section class="set-group" id="acct-sec"><h3>アカウントと同期</h3><div class="set-card">';
     if (!st) {
-      html += '<div class="set-row"><div><b>iPhoneとPCで同じ記録を使う</b><p class="hint">アカウントを作ってログインすると、記録がアカウントにも保存され、ほかの端末からも同じ記録を使えます。</p></div><button class="btn-s" data-act="acctOpen">ログイン</button></div>';
+      html += '<div class="set-row"><div><b>iPhoneとPCで同じ記録を使う</b><p class="hint">Googleアカウントでログインすると、記録がアカウントにも保存され、ほかの端末からも同じ記録を使えます。パスワードは使いません。</p></div><button class="btn-s" data-act="acctOpen">ログイン</button></div>';
     } else {
       html += '<div class="set-row"><div><b class="acct-mail">' + esc(st.email) + '</b><p class="hint" aria-live="polite">' + syncStatusText() + '</p></div>' +
         (st.needChoice
@@ -4265,8 +4367,8 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         '<div class="set-row"><div><b>アカウントを削除</b><p class="hint">アカウントと、アカウントに保存した記録を消します。この端末の記録は残ります。</p></div><button class="btn-s" data-act="acctDelete" style="color:var(--shu)">削除</button></div>';
     }
     html += '</div><p class="hint">' + (Native.on
-      ? 'PCでは ' + esc(PC_URL) + ' を開いて、同じアカウントでログインします。'
-      : 'iPhoneでは、カロタスのアプリで同じアカウントにログインします。') + '</p></section>';
+      ? 'PCでは ' + esc(PC_URL) + ' を開いて、同じGoogleアカウントでログインします。'
+      : 'iPhoneでは、カロタスのアプリで同じGoogleアカウントにログインします。') + '</p></section>';
     return html;
   }
   /** ログイン・ログアウトのあと：開いている設定画面を書き直す（保存先の説明も変わるため） */
@@ -4289,30 +4391,74 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     return '';
   }
 
+  // Googleのボタン：PCでは公式ボタンを mount で描き、iPhoneでは押したときにネイティブの画面を出す
+  const googleButtonHtml = () => '<div class="g-wrap">' + (Native.on
+    ? '<button type="button" class="btn g-native" data-act="googleNative">Googleでログイン</button>'
+    : '<div class="g-web" id="g-btn"><span class="hint">Googleのボタンを読み込んでいます…</span></div>') + '</div>' +
+    '<p class="hint g-busy" id="ac-busy" aria-live="polite"></p><p class="hint bad" id="ac-err" role="alert"></p>';
+  function mountGoogle(el, sh) {
+    if (Native.on) return;
+    const box = el.querySelector('#g-btn');
+    if (box) Google.button(box, { ok: (tok) => googleDone(sh, tok), fail: (e) => googleFail(sh, e) });
+  }
+  function googleBusy(sh, msg) {
+    const layer = document.getElementById(sh.id);
+    if (!layer) return;
+    const b = layer.querySelector('#ac-busy');
+    if (b) b.textContent = msg || '';
+    const w = layer.querySelector('.g-wrap');
+    if (w) w.classList.toggle('busy', !!msg);
+    const err = layer.querySelector('#ac-err');
+    if (err && msg) err.textContent = '';
+  }
+  function googleFail(sh, e) {
+    googleBusy(sh, '');
+    if (isCancel(e)) return; // 自分で閉じたときは何も出さない
+    const err = document.querySelector('#' + sh.id + ' #ac-err');
+    if (err) err.textContent = authMessage(e);
+  }
+  /** Google から ID トークンを受け取ったあと：ログイン、または削除の前の本人確認 */
+  async function googleDone(sh, tok) {
+    if (App.sheets.indexOf(sh) < 0) return;
+    if (sh.type === 'acctDelete') {
+      googleBusy(sh, '確認しています…');
+      try {
+        const st = Account.st;
+        const mail = String(tokenClaims(tok.idToken).email || '').toLowerCase();
+        if (!st || !mail || mail !== String(st.email || '').toLowerCase()) throw gErr('WRONG_ACCOUNT'); // 別のアカウントを作ってしまわないよう、先に確かめる
+        const r = await googleAuth(tok);
+        if (r.localId !== st.uid) throw gErr('WRONG_ACCOUNT');
+        sh.params.fresh = r;
+        fillSheet(sh);
+      } catch (e) {
+        googleFail(sh, e);
+      }
+      return;
+    }
+    googleBusy(sh, 'ログインしています…');
+    try {
+      const result = await signInGoogle(tok);
+      closeSheet(sh.id);
+      render();
+      refreshSettings();
+      if (result === 'choose') openSheet('syncChoice', {});
+      else if (result === 'downloaded') toast('ログインしました。アカウントの記録を読み込みました');
+      else if (result === 'uploaded') toast('ログインしました。この端末の記録をアカウントに送ります');
+      else toast('ログインしました');
+    } catch (e) {
+      googleFail(sh, e);
+    }
+  }
+
   const ACCOUNT_SHEETS = {
     account: {
-      title: (p) => (p.mode === 'signup' ? 'アカウントを作る' : p.mode === 'reset' ? 'パスワードの再設定' : 'ログイン'),
-      body(p) {
-        const mode = p.mode || 'login';
-        const label = mode === 'signup' ? 'アカウントを作る' : mode === 'reset' ? '再設定のメールを送る' : 'ログイン';
-        const intro = mode === 'signup'
-          ? 'メールアドレスとパスワードを決めてください。ほかの端末では、同じメールアドレスとパスワードでログインします。'
-          : mode === 'reset'
-            ? '登録したメールアドレスに、パスワードを決め直すためのメールを送ります。'
-            : 'iPhoneとPCで同じアカウントにログインすると、記録が自動でそろいます。';
-        let h = '<form data-form="acct" data-mode="' + mode + '" novalidate><p class="hint" style="margin-top:0">' + intro + '</p>';
-        h += field('メールアドレス', '<input class="input" id="ac-email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" value="' + esc(p.email || '') + '" autofocus>', '', 'ac-email');
-        if (mode !== 'reset') {
-          h += field('パスワード', '<input class="input" id="ac-pass" type="password" autocomplete="' + (mode === 'signup' ? 'new-password' : 'current-password') + '">',
-            mode === 'signup' ? '8文字以上。ほかのサービスとは別の、このアプリ専用のパスワードにしてください。' : '', 'ac-pass');
-        }
-        h += '<p class="hint bad" id="ac-err" role="alert"></p><div class="btn-row"><button class="btn primary" type="submit">' + label + '</button></div>';
-        h += '<div class="acct-links">';
-        if (mode === 'login') h += '<button type="button" class="link-btn" data-act="acctMode" data-mode="signup">アカウントを作る</button><button type="button" class="link-btn" data-act="acctMode" data-mode="reset">パスワードを忘れた</button>';
-        else h += '<button type="button" class="link-btn" data-act="acctMode" data-mode="login">ログインに戻る</button>';
-        h += '</div><div class="note-box">記録はあなたのアカウントにだけ保存され、ほかの人からは見えません。</div></form>';
-        return h;
+      title: () => 'ログイン',
+      body() {
+        return '<p style="margin-top:0">Googleアカウントでログインします。iPhoneとPCで同じGoogleアカウントにログインすると、記録が自動でそろいます。</p>' +
+          googleButtonHtml() +
+          '<div class="note-box">パスワードは使いません。カロタスがGoogleから受け取るのは、メールアドレスなどの基本的なプロフィールだけです。記録はあなたのアカウントにだけ保存され、ほかの人からは見えません。</div>';
       },
+      mount(el, sh) { mountGoogle(el, sh); },
     },
     syncChoice: {
       title: () => 'どちらの記録を使いますか？',
@@ -4329,24 +4475,34 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     },
     acctDelete: {
       title: () => 'アカウントを削除',
-      body() {
-        return '<form data-form="acctDelete" novalidate><p style="margin-top:0">アカウントと、アカウントに保存した記録を削除します。元に戻せません。この端末の記録は残ります。</p>' +
-          field('確認のため、パスワードを入力', '<input class="input" id="ad-pass" type="password" autocomplete="current-password" autofocus>', '', 'ad-pass') +
-          '<p class="hint bad" id="ad-err" role="alert"></p><div class="btn-row"><button class="btn ghost" type="button" data-act="close">キャンセル</button><button class="btn danger" type="submit">削除する</button></div></form>';
+      body(p) {
+        const st = Account.st;
+        let h = '<p style="margin-top:0">アカウントと、アカウントに保存した記録を削除します。元に戻せません。この端末の記録は残ります。</p>';
+        if (!p.fresh) {
+          return h + '<p class="hint">本人確認のため、ログイン中のGoogleアカウント（' + esc(st ? st.email : '') + '）で、もう一度ログインしてください。</p>' +
+            googleButtonHtml() + '<div class="btn-row"><button class="btn ghost" type="button" data-act="close">キャンセル</button></div>';
+        }
+        return h + '<p class="hint g-ok">本人確認ができました。</p><p class="hint bad" id="ac-err" role="alert"></p>' +
+          '<div class="btn-row"><button class="btn ghost" type="button" data-act="close">キャンセル</button><button class="btn danger" type="button" data-act="acctDeleteGo">削除する</button></div>';
       },
+      mount(el, sh) { if (!sh.params.fresh) mountGoogle(el, sh); },
     },
   };
 
   const ACCOUNT_ACTIONS = {
-    acctOpen() { openSheet('account', { mode: 'login' }); },
-    acctMode(el, sh) {
+    acctOpen() { openSheet('account', {}); },
+    /** iPhone：Google のログイン画面を出す（削除の前の本人確認では、アカウントを選び直してもらう） */
+    async googleNative(el, sh) {
       if (!sh) return;
-      const email = document.querySelector('#' + sh.id + ' #ac-email');
-      sh.params.mode = el.dataset.mode;
-      if (email) sh.params.email = email.value.trim();
-      fillSheet(sh);
-      const f = document.querySelector('#' + sh.id + ' #ac-email');
-      if (f) f.focus();
+      googleBusy(sh, sh.type === 'acctDelete' ? '確認しています…' : 'ログインしています…');
+      let tok;
+      try {
+        tok = await Google.nativeToken(sh.type === 'acctDelete');
+      } catch (e) {
+        googleFail(sh, e);
+        return;
+      }
+      googleDone(sh, tok);
     },
     syncNow() { Sync.run(); },
     acctChoose() {
@@ -4383,6 +4539,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         onOk: () => {
           Sync.stop();
           Account.end();
+          Google.signOut();
           Account.expired = false;
           render();
           refreshSettings();
@@ -4391,63 +4548,25 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       });
     },
     acctDelete() { openSheet('acctDelete', {}); },
-  };
-
-  const ACCOUNT_FORMS = {
-    async acct(form, sh) {
-      const mode = form.dataset.mode;
-      const email = form.querySelector('#ac-email').value.trim();
-      const passEl = form.querySelector('#ac-pass');
-      const pass = passEl ? passEl.value : '';
-      const err = form.querySelector('#ac-err');
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = 'メールアドレスを正しく入力してください。'; return; }
-      if (mode === 'signup' && pass.length < 8) { err.textContent = 'パスワードは8文字以上にしてください。'; return; }
-      if (mode === 'login' && !pass) { err.textContent = 'パスワードを入力してください。'; return; }
-      const btn = form.querySelector('button[type="submit"]');
-      const label = btn.textContent;
-      btn.disabled = true;
-      btn.textContent = mode === 'reset' ? '送っています…' : mode === 'signup' ? '作っています…' : 'ログインしています…';
-      err.textContent = '';
+    async acctDeleteGo(el, sh) {
+      if (!sh || !sh.params.fresh) return;
+      el.disabled = true;
+      el.textContent = '削除しています…';
       try {
-        if (mode === 'reset') {
-          await authPost('sendOobCode', { requestType: 'PASSWORD_RESET', email });
-          closeSheet(sh && sh.id);
-          toast('パスワード再設定のメールを送りました');
-          return;
-        }
-        const result = await signIn(email, pass, mode === 'signup');
-        closeSheet(sh && sh.id);
-        render();
-        refreshSettings();
-        if (result === 'choose') openSheet('syncChoice', {});
-        else if (result === 'downloaded') toast('ログインしました。アカウントの記録を読み込みました');
-        else if (result === 'uploaded') toast('ログインしました。この端末の記録をアカウントに送ります');
-        else toast(mode === 'signup' ? 'アカウントを作りました' : 'ログインしました');
-      } catch (e) {
-        err.textContent = authMessage(e);
-        btn.disabled = false;
-        btn.textContent = label;
-      }
-    },
-    async acctDelete(form, sh) {
-      const pass = form.querySelector('#ad-pass').value;
-      const err = form.querySelector('#ad-err');
-      if (!pass) { err.textContent = 'パスワードを入力してください。'; return; }
-      const btn = form.querySelector('button[type="submit"]');
-      btn.disabled = true;
-      btn.textContent = '削除しています…';
-      try {
-        await deleteAccount(pass);
+        await deleteAccount(sh.params.fresh);
         closeAllSheets();
         render();
         toast('アカウントを削除しました。この端末の記録は残っています');
       } catch (e) {
-        err.textContent = authMessage(e);
-        btn.disabled = false;
-        btn.textContent = '削除する';
+        if (e.code === 'CREDENTIAL_TOO_OLD_LOGIN_AGAIN' || e.code === 'INVALID_ID_TOKEN') sh.params.fresh = null; // 確認からやり直す
+        fillSheet(sh);
+        const err = document.querySelector('#' + sh.id + ' #ac-err');
+        if (err) err.textContent = authMessage(e);
       }
     },
   };
+
+  const ACCOUNT_FORMS = {}; // パスワードの入力欄はもうない（Googleでログイン）
 
 
   // バックアップ
