@@ -32,7 +32,6 @@
   --kin-bright: #f0a536;
   --kin-soft: #fdf3e2;
   --midori: #1f8a4f;
-  --p2: #e0830b;
   --p3: #2c6fdc;
   --bar-base: #3b3b3b;
   --heat-1: #fbe2de;
@@ -63,7 +62,6 @@
     --kin-bright: #e7a43c;
     --kin-soft: #3a2e1a;
     --midori: #4cc37e;
-    --p2: #f0a03f;
     --p3: #6c9ef2;
     --bar-base: #d0d0d0;
     --heat-1: #3a2320;
@@ -91,7 +89,6 @@
   --kin-bright: #e7a43c;
   --kin-soft: #3a2e1a;
   --midori: #4cc37e;
-  --p2: #f0a03f;
   --p3: #6c9ef2;
   --bar-base: #d0d0d0;
   --heat-1: #3a2320;
@@ -742,6 +739,7 @@ details.more[open] summary::before { content: "− "; }
 .set-group { margin-top: 22px; }
 .set-group > h3 { font-size: 13px; color: var(--ink-2); margin: 0 0 6px 2px; font-weight: 700; }
 .set-card { background: var(--fill); border-radius: 12px; padding: 2px 14px; }
+.set-card + .set-card { margin-top: 8px; }
 .set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line-2); }
 .set-row:first-child { border-top: 0; }
 .set-row > div { min-width: 0; }
@@ -817,9 +815,6 @@ body.sheet-open .toast { bottom: calc(20px + env(safe-area-inset-bottom)); }
 .task-row.sortable-item.dragging { position: absolute; left: 0; right: 0; z-index: 3; box-shadow: var(--shadow); border-radius: 10px; }
 .task-row.sortable-item.dragging::before { display: none; }
 .tcheck { --pc: var(--ink-3); --pc-soft: transparent; width: 20px; height: 20px; margin: 13px 0 0 3px; border-radius: 50%; border: 1.5px solid var(--pc); background: var(--pc-soft); padding: 0; position: relative; }
-.tcheck.p1 { --pc: var(--shu); --pc-soft: var(--shu-soft); border-width: 2px; }
-.tcheck.p2 { --pc: var(--p2); --pc-soft: rgba(224, 131, 11, 0.12); border-width: 2px; }
-.tcheck.p3 { --pc: var(--p3); --pc-soft: rgba(44, 111, 220, 0.12); border-width: 2px; }
 .tcheck::after { content: ""; position: absolute; left: 5px; top: 1.5px; width: 5px; height: 10px; border: solid var(--pc); border-width: 0 2px 2px 0; transform: rotate(45deg); opacity: 0; transition: opacity 0.15s; }
 .tcheck:hover::after { opacity: 0.5; }
 .tcheck.done { --pc: var(--ink-3); background: var(--ink-3); }
@@ -869,9 +864,6 @@ body.sheet-open .toast { bottom: calc(20px + env(safe-area-inset-bottom)); }
 .te-head .tcheck { margin: 0 0 0 3px; }
 .te-title { font-size: 18px; font-weight: 800; }
 .te-note { margin-top: 8px; min-height: 60px; font-family: var(--font); font-size: 15px; }
-.seg.pri button.pri-1[aria-pressed="true"] { color: var(--shu-text); }
-.seg.pri button.pri-2[aria-pressed="true"] { color: var(--p2); }
-.seg.pri button.pri-3[aria-pressed="true"] { color: var(--p3); }
 .lchips { display: flex; flex-wrap: wrap; gap: 6px; }
 .lchips button { border: 0; background: var(--fill); border-radius: 999px; padding: 6px 12px; font-size: 13.5px; font-weight: 700; color: var(--lc, var(--ink-2)); }
 .lchips button[aria-pressed="true"] { background: var(--lc, var(--shu)); color: #fff; }
@@ -1441,27 +1433,26 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       { id: 'l-out', name: '外出', color: 'midori', order: 1 },
       { id: 'l-15', name: '15分', color: 'ai', order: 2 },
     ];
-    todo.filters = [
-      { id: 'f-urgent', name: '急ぎ（P1・P2）', cond: { when: 'week', priorities: [1, 2], labels: [], projects: [], text: '' }, order: 0 },
-    ];
+    addTodoStarter(todo); // 初期プロジェクト・ラベル（GTD）も見せる
+    todo.settings.starterAdded = true;
     const T = (o) => Object.assign({
-      id: id('t'), title: '', note: '', projectId: null, sectionId: null, parentId: null, order: 0, priority: 4,
+      id: id('t'), title: '', note: '', projectId: null, sectionId: null, parentId: null, order: 0,
       labels: [], due: null, deadline: null, repeat: null, reminder: null, reward: 50, done: false, createdAt: t0,
     }, o);
     const nextWd = (wds) => { let d = addDays(today, 1); while (wds.indexOf(weekday(d)) < 0) d = addDays(d, 1); return d; };
-    const plan = T({ id: 't-plan', title: '企画書を作成する', projectId: 'p-work', sectionId: 's-docs', priority: 2, due: { date: addDays(today, 3) }, deadline: addDays(today, 5), reward: 150 });
-    const tax = T({ id: 't-tax', title: '確定申告を終わらせる', projectId: 'p-tax', priority: 1, due: { date: addDays(today, 10) }, deadline: addDays(today, 40), reward: 300, note: '控除の書類を先にそろえる' });
+    const plan = T({ id: 't-plan', title: '企画書を作成する', projectId: 'p-work', sectionId: 's-docs', due: { date: addDays(today, 3) }, deadline: addDays(today, 5), reward: 150 });
+    const tax = T({ id: 't-tax', title: '確定申告を終わらせる', projectId: 'p-tax', due: { date: addDays(today, 10) }, deadline: addDays(today, 40), reward: 300, note: '控除の書類を先にそろえる' });
     todo.tasks = [
-      T({ title: 'メールを返信する', priority: 3, due: { date: today }, reward: 50, order: 0 }),
+      T({ title: 'メールを返信する', due: { date: today }, reward: 50, order: 0 }),
       T({ title: '旅行の予約を調べる', due: { date: addDays(today, 1) }, reward: 150, order: 1 }),
       T({ title: '部屋の片付け', reward: 50, order: 2 }),
-      T({ title: '資料を確認する', projectId: 'p-work', sectionId: 's-week', priority: 2, due: { date: today }, reward: 100, labels: ['l-15'], order: 0 }),
+      T({ title: '資料を確認する', projectId: 'p-work', sectionId: 's-week', due: { date: today }, reward: 100, labels: ['l-15', 'l-gtd-next'], order: 0 }),
       T({ title: '週報を書く', projectId: 'p-work', sectionId: 's-week', due: { date: nextWd([5]) }, repeat: { type: 'weekly', every: 1, days: [5] }, reward: 100, order: 1 }),
       plan,
       T({ title: '構成を考える', projectId: 'p-work', sectionId: 's-docs', parentId: 't-plan', reward: 0, done: true, order: 0 }),
       T({ title: 'グラフを作る', projectId: 'p-work', sectionId: 's-docs', parentId: 't-plan', reward: 0, order: 1 }),
       T({ title: '見直す', projectId: 'p-work', sectionId: 's-docs', parentId: 't-plan', reward: 0, order: 2 }),
-      T({ title: '銀行に連絡する', projectId: 'p-life', priority: 1, due: { date: today, time: '18:00' }, reminder: today + 'T17:30', reward: 50, labels: ['l-tel'], order: 0 }),
+      T({ title: '銀行に連絡する', projectId: 'p-life', due: { date: today, time: '18:00' }, reminder: today + 'T17:30', reward: 50, labels: ['l-tel'], order: 0 }),
       T({ title: '燃えるゴミを出す', projectId: 'p-life', due: { date: nextWd([1, 4]) }, repeat: { type: 'weekly', every: 1, days: [1, 4] }, reward: 30, labels: ['l-out'], order: 1 }),
       T({ title: '観葉植物に水やり', projectId: 'p-life', due: { date: addDays(today, -1) }, repeat: { type: 'daily', every: 3 }, reward: 20, order: 2 }),
       tax,
@@ -1482,6 +1473,11 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     }
     const morning = T({ id: 't-morning', title: '朝のメールチェック', projectId: 'p-work', due: { date: today }, reward: 50 });
     completions.push({ id: id('c'), taskId: morning.id, date: today, ts: ts(today, 8, 30), reward: 50, title: morning.title, projectId: 'p-work', recurring: false, snapshot: { task: morning, subtasks: [] } });
+    // 初期プロジェクト・ラベル（GTD）の使い方の例。乱数を使い終わったあとに作る
+    todo.tasks.push(
+      T({ title: '見積もりの返事を待つ', projectId: 'p-gtd-single', labels: ['l-gtd-waiting'], reward: 30, order: 0 }),
+      T({ title: 'ギターを習う', projectId: 'p-gtd-someday', reward: 50, order: 0 }),
+    );
     return { core, entries, meals, withdrawals, confirmed, todo, completions };
   }
 
@@ -1501,7 +1497,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         ext: { mode: 'none', offline: false, lastSyncAt: null, source: [] },
       },
       entries: [], meals: [], withdrawals: {}, confirmed: {},
-      todo: emptyTodo(), completions: [],
+      todo: starterTodo(), completions: [],
     };
   }
 
@@ -1533,7 +1529,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
 
   // ===== ToDo =====
   function emptyTodo() {
-    return { v: 1, settings: { defaultReward: 50 }, projects: [], sections: [], labels: [], filters: [], tasks: [] };
+    return { v: 1, settings: { defaultReward: 50 }, projects: [], sections: [], labels: [], tasks: [] };
   }
   function daysInMonth(y, m) { return new Date(y, m, 0).getDate(); } // m は 1〜12
   /** 繰り返しの次の日付（毎日・平日・毎週・毎月・毎年、N日/週/か月ごと） */
@@ -1647,28 +1643,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     todo.tasks.push(clone(snap.task));
     for (const s of snap.subtasks || []) if (!todo.tasks.some((x) => x.id === s.id)) todo.tasks.push(clone(s));
   }
-  /** フィルター条件に合うか（未完了のタスクだけが対象） */
-  function matchFilter(task, cond, today) {
-    if (!cond || task.done) return false;
-    if (cond.priorities && cond.priorities.length && cond.priorities.indexOf(task.priority) < 0) return false;
-    if (cond.labels && cond.labels.length && !cond.labels.some((l) => (task.labels || []).indexOf(l) >= 0)) return false;
-    if (cond.projects && cond.projects.length && cond.projects.indexOf(task.projectId || 'inbox') < 0) return false;
-    if (cond.text) {
-      const hay = (task.title + ' ' + (task.note || '')).toLowerCase();
-      if (hay.indexOf(String(cond.text).toLowerCase()) < 0) return false;
-    }
-    const due = task.due && task.due.date;
-    switch (cond.when) {
-      case 'overdue': return !!due && due < today;
-      case 'today': return due === today;
-      case 'todayOver': return !!due && due <= today;
-      case 'tomorrow': return due === addDays(today, 1);
-      case 'week': return !!due && due <= addDays(today, 6);
-      case 'nodate': return !due;
-      default: return true;
-    }
-  }
-  /** 予定日 → 時刻 → 優先度 → 並び順 */
+  /** 予定日 → 時刻 → 並び順 */
   function taskSort(a, b) {
     const ad = a.due ? a.due.date : '9999-99-99';
     const bd = b.due ? b.due.date : '9999-99-99';
@@ -1676,8 +1651,73 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     const at = (a.due && a.due.time) || '99:99';
     const bt = (b.due && b.due.time) || '99:99';
     if (at !== bt) return at < bt ? -1 : 1;
-    if ((a.priority || 4) !== (b.priority || 4)) return (a.priority || 4) - (b.priority || 4);
     return (a.order || 0) - (b.order || 0);
+  }
+
+  // ToDoの初期プロジェクトとラベル（GTDの形）。消したあとは自動では足し直さない
+  const TODO_STARTER = {
+    projects: [
+      { id: 'p-gtd-single', name: 'Single Actions', color: 'midori' },
+      { id: 'p-gtd-someday', name: 'Someday / Maybe', color: 'murasaki' },
+      { id: 'p-gtd-projects', name: 'Projects', color: 'ai' },
+    ],
+    labels: [
+      { id: 'l-gtd-next', name: 'next', color: 'shu' },
+      { id: 'l-gtd-waiting', name: 'waiting', color: 'kin' },
+    ],
+  };
+  const sameName = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+  const nextOrder = (list) => list.reduce((m, x) => Math.max(m, typeof x.order === 'number' ? x.order : -1), -1) + 1;
+  /** まだない初期プロジェクト・ラベル（同じ名前のものを自分で作っていれば、それはないものに数えない） */
+  function starterMissing(todo) {
+    return {
+      projects: TODO_STARTER.projects.filter((s) => !todo.projects.some((x) => x.id === s.id || sameName(x.name, s.name))),
+      labels: TODO_STARTER.labels.filter((s) => !todo.labels.some((x) => x.id === s.id || sameName(x.name, s.name))),
+    };
+  }
+  /** いまある初期プロジェクト・ラベル（名前を変えていても、初期のものとして数える） */
+  function starterPresent(todo) {
+    const has = (list, s) => list.find((x) => x.id === s.id);
+    return {
+      projects: TODO_STARTER.projects.map((s) => has(todo.projects, s)).filter(Boolean),
+      labels: TODO_STARTER.labels.map((s) => has(todo.labels, s)).filter(Boolean),
+    };
+  }
+  /** 足りない初期プロジェクト・ラベルを後ろに足す。足した数を返す */
+  function addTodoStarter(todo) {
+    const miss = starterMissing(todo);
+    for (const s of miss.projects) todo.projects.push({ id: s.id, name: s.name, color: s.color, order: nextOrder(todo.projects), archived: false });
+    for (const s of miss.labels) todo.labels.push({ id: s.id, name: s.name, color: s.color, order: nextOrder(todo.labels) });
+    return miss.projects.length + miss.labels.length;
+  }
+  /** 初期プロジェクト・ラベルを消す。中のタスクはInboxの後ろへ移し、ラベルはタスクから外す。消した数を返す */
+  function removeTodoStarter(todo) {
+    const pres = starterPresent(todo);
+    const pids = new Set(pres.projects.map((p) => p.id));
+    const lids = new Set(pres.labels.map((l) => l.id));
+    const rank = (t) => {
+      const p = todo.projects.find((x) => x.id === t.projectId);
+      return [p ? p.order || 0 : 0, t.order || 0];
+    };
+    const moving = todo.tasks.filter((t) => pids.has(t.projectId) && !t.parentId)
+      .sort((a, b) => { const x = rank(a), y = rank(b); return x[0] - y[0] || x[1] - y[1]; });
+    let order = nextOrder(todo.tasks.filter((t) => !t.projectId && !t.parentId));
+    for (const t of moving) t.order = order++;
+    for (const t of todo.tasks) {
+      if (pids.has(t.projectId)) { t.projectId = null; t.sectionId = null; }
+      if ((t.labels || []).some((id) => lids.has(id))) t.labels = t.labels.filter((id) => !lids.has(id));
+    }
+    todo.sections = todo.sections.filter((s) => !pids.has(s.projectId));
+    todo.projects = todo.projects.filter((p) => !pids.has(p.id));
+    todo.labels = todo.labels.filter((l) => !lids.has(l.id));
+    return pids.size + lids.size;
+  }
+  /** 新しく始めるときのToDo：初期プロジェクト・ラベル入り */
+  function starterTodo() {
+    const todo = emptyTodo();
+    addTodoStarter(todo);
+    todo.settings.starterAdded = true;
+    return todo;
   }
 
   // ===== ヘルスケアの取り込み（iPhoneのショートカットが出したテキスト） =====
@@ -1796,7 +1836,8 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     buildIndex, computeLedger, dayStatus, ledgerLines, context, maxWithdrawal,
     makeDemo, makeEmpty, syncExternal,
     parseHealthLine, parseHealthText, healthImport,
-    emptyTodo, nextOccurrence, nextDue, repeatLabel, completeTask, uncompleteTask, matchFilter, taskSort,
+    emptyTodo, nextOccurrence, nextDue, repeatLabel, completeTask, uncompleteTask, taskSort,
+    TODO_STARTER, starterMissing, starterPresent, addTodoStarter, removeTodoStarter, starterTodo,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = Engine;
   else root.Engine = Engine;
@@ -3317,9 +3358,9 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   function normalizeTodo(t) {
     if (!t || typeof t !== 'object') return E.emptyTodo();
     delete t._by; delete t._at;
-    for (const k of ['projects', 'sections', 'labels', 'filters', 'tasks']) if (!Array.isArray(t[k])) t[k] = [];
+    for (const k of ['projects', 'sections', 'labels', 'tasks']) if (!Array.isArray(t[k])) t[k] = [];
     t.settings = Object.assign({ defaultReward: 50 }, t.settings);
-    t.tasks.forEach((x) => { if (!Array.isArray(x.labels)) x.labels = []; if (!x.priority) x.priority = 4; });
+    t.tasks.forEach((x) => { if (!Array.isArray(x.labels)) x.labels = []; });
     return t;
   }
   function normalizeComps(c) {
@@ -3670,6 +3711,17 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     Store.markDirty('core');
     return true;
   }
+  /** 前からのデータ：ToDoに初期のプロジェクトとラベル（GTD）を一度だけ足す。消したものは足し直さない */
+  function ensureTodoStarter() {
+    if (!App.data || App.sample) return false;
+    const td = App.data.todo;
+    if (td.settings.starterAdded) return false;
+    E.addTodoStarter(td);
+    td.settings.starterAdded = true;
+    App.rev++;
+    Store.markDirty('todo');
+    return true;
+  }
 
   // ===================== アカウントと同期（Firebase） =====================
   // iPhoneアプリとPC（ブラウザ）で同じ記録を使うための部分。
@@ -3953,8 +4005,12 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
           this.setState('ok');
           if (!this.firstDone) {
             this.firstDone = true;
-            // 前からのデータを今日からログインボーナスにする。最新の記録を受け取ってから行う（古い設定で上書きしない）
-            if (ensureLoginMode()) { render(); bonusToast(); }
+            // 前からのデータを今日からログインボーナスにし、ToDoに初期のプロジェクトとラベルを足す。
+            // 最新の記録を受け取ってから行う（古いデータで上書きしない）
+            const login = ensureLoginMode();
+            const starter = ensureTodoStarter();
+            if (login || starter) render();
+            if (login) bonusToast();
           }
         } catch (e) {
           this.fail(e);
@@ -4441,7 +4497,6 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   // app.js の中に組み込まれる（同じスコープの App, E, esc, fmt などを使う）
   const TCOLORS = { ai: '#3f63c5', shu: '#d24a32', kin: '#d99a2b', midori: '#3f8f5b', murasaki: '#7a5bb5', momo: '#d0587e', aomidori: '#2b8a8a', hai: '#8a92a6' };
   const TCOLOR_NAMES = { ai: '藍', shu: '朱', kin: '金', midori: '緑', murasaki: '紫', momo: '桃', aomidori: '青緑', hai: '灰' };
-  const WHEN_LABEL = { all: 'すべて', todayOver: '今日まで（期限切れを含む）', today: '今日', overdue: '期限切れ', tomorrow: '明日', week: '7日以内', nodate: '日付なし' };
   const IC_SEARCH = svg('<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>');
   const byOrder = (a, b) => (a.order || 0) - (b.order || 0);
 
@@ -4450,7 +4505,6 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   function projectById(id) { return id ? App.data.todo.projects.find((p) => p.id === id) : null; }
   function sectionById(id) { return id ? App.data.todo.sections.find((s) => s.id === id) : null; }
   function labelById(id) { return App.data.todo.labels.find((l) => l.id === id); }
-  function filterById(id) { return App.data.todo.filters.find((f) => f.id === id); }
   function subtasksOf(id) { return App.data.todo.tasks.filter((t) => t.parentId === id).sort(byOrder); }
   function projColor(p) { return TCOLORS[(p && p.color) || 'hai'] || TCOLORS.hai; }
   function projectsOf(archived) { return todo().projects.filter((p) => !!p.archived === !!archived).sort(byOrder); }
@@ -4520,7 +4574,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     const nested = o.nested && subs.some((s) => !s.done)
       ? '<ul class="subtask-list">' + subs.filter((s) => !s.done).map((s) => taskRow(s, { showDate: true })).join('') + '</ul>' : '';
     return '<li class="task-row' + (o.sortable ? ' sortable-item' : '') + (task.parentId ? ' is-sub' : '') + '" data-task-row="' + task.id + '" data-id="' + task.id + '">' +
-      '<button class="tcheck p' + (task.priority || 4) + '" data-act="taskDone" data-id="' + task.id + '" aria-label="「' + esc(task.title) + '」を完了にする"></button>' +
+      '<button class="tcheck" data-act="taskDone" data-id="' + task.id + '" aria-label="「' + esc(task.title) + '」を完了にする"></button>' +
       '<button class="task-main" data-act="taskOpen" data-id="' + task.id + '"><span class="task-title">' + esc(task.title) + '</span>' +
       (meta.length ? '<span class="task-meta">' + meta.join('') + '</span>' : '') + '</button>' + kcal +
       (o.sortable ? '<button class="grip" data-grip="1" aria-label="「' + esc(task.title) + '」を並び替え。上下の矢印キーでも移動できます">' + IC.grip + '</button>' : '') +
@@ -4548,12 +4602,12 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     if (d !== t) return todoPastCard(c, d);
     const tab = App.ui.todoTab || 'inbox'; // 最初に開くのは Inbox
     const counts = { today: todayCount(t), inbox: topLive().filter((x) => !x.projectId).length };
-    const tabs = [['inbox', 'Inbox'], ['today', '今日'], ['upcoming', '近日予定'], ['projects', 'プロジェクト'], ['labels', 'ラベル・フィルター']];
+    const tabs = [['inbox', 'Inbox'], ['today', '今日'], ['upcoming', '近日予定'], ['projects', 'プロジェクト'], ['labels', 'ラベル']];
     let body;
     if (tab === 'inbox') body = viewInbox();
     else if (tab === 'upcoming') body = viewUpcoming(t);
     else if (tab === 'projects') body = App.ui.todoId ? viewProject(App.ui.todoId) : viewProjects();
-    else if (tab === 'labels') body = App.ui.todoId ? viewLabelOrFilter(App.ui.todoId, t) : viewLabels(t);
+    else if (tab === 'labels') body = App.ui.todoId ? viewLabel(App.ui.todoId) : viewLabels();
     else if (tab === 'done') body = viewDone();
     else body = viewToday(c, t);
     return '<section class="card todo" aria-label="ToDo"><div class="ttabs" role="tablist" aria-label="ToDoの表示">' +
@@ -4642,36 +4696,21 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     }
     return h + '<div class="btn-row"><button class="btn ghost" data-act="secNew" data-project="' + pid + '">' + IC.plus + 'セクションを追加</button></div>';
   }
-  function viewLabels(t) {
+  function viewLabels() {
     const labels = todo().labels.slice().sort(byOrder);
-    const filters = todo().filters.slice().sort(byOrder);
     const live = liveTasks();
     let h = secHead('ラベル', '<button class="link-btn" data-act="labelNew">' + IC.plus + '追加</button>');
-    h += labels.length ? '<ul class="plist">' + labels.map((l) => '<li><button class="pl-row" data-act="labelOpen" data-id="' + l.id + '"><span class="lmark" style="color:' + (TCOLORS[l.color] || TCOLORS.hai) + '">@</span><span>' + esc(l.name) + '</span><b>' + live.filter((x) => (x.labels || []).indexOf(l.id) >= 0).length + '</b>' + IC.chev + '</button></li>').join('') + '</ul>'
-      : '<p class="empty">「電話」「外出」など、プロジェクトをまたいだ目印を付けられます。</p>';
-    h += secHead('フィルター', '<button class="link-btn" data-act="filterNew">' + IC.plus + '追加</button>');
-    h += filters.length ? '<ul class="plist">' + filters.map((f) => '<li><button class="pl-row" data-act="filterOpen" data-id="' + f.id + '"><span class="lmark">≡</span><span>' + esc(f.name) + '</span><b>' + live.filter((x) => E.matchFilter(x, f.cond, t)).length + '</b>' + IC.chev + '</button></li>').join('') + '</ul>'
-      : '<p class="empty">期間・優先度・ラベルなどの条件で、タスクを取り出す一覧を作れます。</p>';
-    return h;
+    return h + (labels.length ? '<ul class="plist">' + labels.map((l) => '<li><button class="pl-row" data-act="labelOpen" data-id="' + l.id + '"><span class="lmark" style="color:' + (TCOLORS[l.color] || TCOLORS.hai) + '">@</span><span>' + esc(l.name) + '</span><b>' + live.filter((x) => (x.labels || []).indexOf(l.id) >= 0).length + '</b>' + IC.chev + '</button></li>').join('') + '</ul>'
+      : '<p class="empty">「next」「waiting」など、プロジェクトをまたいだ目印を付けられます。</p>');
   }
-  function condSummary(cond) {
-    const parts = [WHEN_LABEL[cond.when || 'all']];
-    if (cond.priorities && cond.priorities.length) parts.push(cond.priorities.map((p) => 'P' + p).join('・'));
-    if (cond.labels && cond.labels.length) parts.push(cond.labels.map((id) => { const l = labelById(id); return l ? '@' + l.name : ''; }).filter(Boolean).join(' '));
-    if (cond.projects && cond.projects.length) parts.push(cond.projects.map((id) => (id === 'inbox' ? 'Inbox' : (projectById(id) || {}).name || '')).filter(Boolean).join('・'));
-    if (cond.text) parts.push('「' + cond.text + '」');
-    return parts.map(esc).join(' ／ ');
-  }
-  function viewLabelOrFilter(key, t) {
-    const isLabel = key.indexOf('l:') === 0;
-    const id = key.slice(2);
-    const obj = isLabel ? labelById(id) : filterById(id);
-    if (!obj) { App.ui.todoId = null; return viewLabels(t); }
-    const items = liveTasks().filter((x) => (isLabel ? (x.labels || []).indexOf(id) >= 0 : E.matchFilter(x, obj.cond, t))).sort(E.taskSort);
-    let h = '<div class="tnav"><button class="link-btn" data-act="todoBack">' + IC.left + 'ラベル・フィルター</button><button class="link-btn" data-act="' + (isLabel ? 'labelEdit' : 'filterEdit') + '" data-id="' + id + '">編集</button></div>';
-    h += '<h3 class="tproj-title">' + (isLabel ? '<span class="lmark" style="color:' + (TCOLORS[obj.color] || TCOLORS.hai) + '">@</span>' : '<span class="lmark">≡</span>') + esc(obj.name) + '</h3>';
-    if (!isLabel) h += '<p class="hint" style="margin-top:-4px">' + condSummary(obj.cond) + '</p>';
-    return h + (items.length ? taskList(items, { showProject: true, showParent: true }) : '<p class="empty">当てはまるタスクはありません。</p>');
+  function viewLabel(key) {
+    const id = key.indexOf('l:') === 0 ? key.slice(2) : '';
+    const l = id ? labelById(id) : null;
+    if (!l) { App.ui.todoId = null; return viewLabels(); }
+    const items = liveTasks().filter((x) => (x.labels || []).indexOf(id) >= 0).sort(E.taskSort);
+    let h = '<div class="tnav"><button class="link-btn" data-act="todoBack">' + IC.left + 'ラベル一覧</button><button class="link-btn" data-act="labelEdit" data-id="' + id + '">編集</button></div>';
+    h += '<h3 class="tproj-title"><span class="lmark" style="color:' + (TCOLORS[l.color] || TCOLORS.hai) + '">@</span>' + esc(l.name) + '</h3>';
+    return h + (items.length ? taskList(items, { showProject: true, showParent: true }) : '<p class="empty">このラベルが付いたタスクはありません。</p>');
   }
   function viewDone() {
     const all = allComps();
@@ -4710,10 +4749,6 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     const p = String(v || '').split('|');
     return { projectId: p[0] || null, sectionId: p[1] || null };
   }
-  function prioritySeg(act, cur) {
-    return '<div class="seg pri" role="group" aria-label="優先度">' + [1, 2, 3, 4].map((p) =>
-      '<button type="button" class="pri-' + p + '" data-act="' + act + '" data-v="' + p + '" aria-pressed="' + (cur === p) + '">P' + p + '</button>').join('') + '</div>';
-  }
   function colorPicker(act, cur) {
     return '<div class="cpick" role="group" aria-label="色">' + Object.keys(TCOLORS).map((k) =>
       '<button type="button" data-act="' + act + '" data-v="' + k + '" aria-pressed="' + (cur === k) + '" aria-label="' + TCOLOR_NAMES[k] + '" style="--sw:' + TCOLORS[k] + '"></button>').join('') + '</div>';
@@ -4728,7 +4763,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       title: t.title, note: t.note || '', proj: (t.projectId || '') + (t.sectionId ? '|' + t.sectionId : ''),
       date: t.due ? t.due.date : '', time: t.due && t.due.time ? t.due.time : '', deadline: t.deadline || '',
       rtype: t.repeat ? rp.type : '', every: rp.every || 1, rdays: (rp.days || []).slice(),
-      priority: t.priority || 4, labels: (t.labels || []).slice(), reminder: t.reminder || '', reward: t.reward || 0,
+      labels: (t.labels || []).slice(), reminder: t.reminder || '', reward: t.reward || 0,
     };
   }
   function readDraft(sh) {
@@ -4762,7 +4797,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     const subs = subtasksOf(t.id);
     let h = '<h3 class="dv-h"><span>サブタスク</span><span>' + (subs.length ? subs.filter((s) => s.done).length + '/' + subs.length + ' 完了' : '') + '</span></h3>';
     if (subs.length) {
-      h += '<ul class="sub-edit">' + subs.map((s) => '<li class="' + (s.done ? 'done' : '') + '"><button type="button" class="tcheck p' + (s.priority || 4) + (s.done ? ' done' : '') + '" data-act="subToggle" data-id="' + s.id + '" aria-label="「' + esc(s.title) + '」を' + (s.done ? '未完了に戻す' : '完了にする') + '"></button>' +
+      h += '<ul class="sub-edit">' + subs.map((s) => '<li class="' + (s.done ? 'done' : '') + '"><button type="button" class="tcheck' + (s.done ? ' done' : '') + '" data-act="subToggle" data-id="' + s.id + '" aria-label="「' + esc(s.title) + '」を' + (s.done ? '未完了に戻す' : '完了にする') + '"></button>' +
         '<button type="button" class="sub-title" data-act="taskOpen" data-id="' + s.id + '">' + esc(s.title) + '</button><button type="button" class="del-btn" data-act="subDelete" data-id="' + s.id + '">削除</button></li>').join('') + '</ul>';
     }
     h += '<div class="row2"><input class="input" id="te-newsub" placeholder="サブタスクを追加" maxlength="120" aria-label="新しいサブタスク"><button type="button" class="btn" data-act="subAdd">追加</button></div>';
@@ -4787,7 +4822,6 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     const el = document.getElementById(sh.id);
     if (el) el.querySelector('#ts-res').innerHTML = searchResults(sh.params.q);
   }
-  function filterCount(cond) { const t = today(); return liveTasks().filter((x) => E.matchFilter(x, cond, t)).length; }
   function toggleIn(list, v) { const i = list.indexOf(v); if (i >= 0) list.splice(i, 1); else list.push(v); }
   /** 完了の「+kcal」は行が消えても見えるよう、画面に固定して浮かべる */
   function flyAt(el, text) {
@@ -4808,7 +4842,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       const list = todo().tasks;
       const order = list.filter((x) => (x.projectId || null) === (f.projectId || null) && (x.sectionId || null) === (f.sectionId || null) && !x.parentId)
         .reduce((m, x) => Math.max(m, x.order || 0), -1) + 1;
-      const t = Object.assign({ id: newId('t'), title: '', note: '', projectId: null, sectionId: null, parentId: null, order, priority: 4, labels: [], due: null, deadline: null, repeat: null, reminder: null, reward: todo().settings.defaultReward, done: false, createdAt: Date.now() }, f);
+      const t = Object.assign({ id: newId('t'), title: '', note: '', projectId: null, sectionId: null, parentId: null, order, labels: [], due: null, deadline: null, repeat: null, reminder: null, reward: todo().settings.defaultReward, done: false, createdAt: Date.now() }, f);
       list.push(t);
       commit(['todo']);
       return t;
@@ -4885,7 +4919,6 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
           p.form = {
             date: p.date !== undefined ? p.date : (tab === 'today' || tab === 'upcoming' ? t : ''),
             proj: proj ? proj + (p.section ? '|' + p.section : '') : '',
-            priority: 4,
             reward: todo().settings.defaultReward,
             label: tab === 'labels' && App.ui.todoId && App.ui.todoId.indexOf('l:') === 0 ? App.ui.todoId.slice(2) : '',
           };
@@ -4896,8 +4929,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         h += '<input class="input big-title" id="tn-title" maxlength="120" autocomplete="off" placeholder="例：資料を確認する" aria-label="タスク名" autofocus>';
         h += field('予定日', '<input type="date" class="input" id="tn-date" value="' + f.date + '"><div class="quick">' +
           [['今日', t], ['明日', E.addDays(t, 1)], ['来週', nextMonday(t)], ['なし', '']].map((x) => '<button type="button" data-act="tnDate" data-v="' + x[1] + '">' + x[0] + '</button>').join('') + '</div>', '', 'tn-date');
-        h += field('プロジェクト', projectSelect('tn-proj', pr.projectId, pr.sectionId), '', 'tn-proj');
-        h += '<div class="row2 top">' + field('優先度', prioritySeg('tnPri', f.priority)) +
+        h += '<div class="row2 top">' + field('プロジェクト', projectSelect('tn-proj', pr.projectId, pr.sectionId), '', 'tn-proj') +
           field('報酬', '<div class="unit" data-unit="kcal"><input class="input" id="tn-reward" inputmode="numeric" value="' + f.reward + '"></div>', '', 'tn-reward') + '</div>';
         if (f.label) { const l = labelById(f.label); if (l) h += '<p class="hint">ラベル「@' + esc(l.name) + '」を付けて追加します。</p>'; }
         h += '<p class="hint bad" id="tn-err" role="alert"></p><div class="btn-row"><button class="btn primary" type="submit">追加する</button></div>';
@@ -4916,7 +4948,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
           const par = taskById(t.parentId);
           if (par) h += '<button type="button" class="link-btn" data-act="taskOpen" data-id="' + par.id + '">↳ ' + esc(par.title) + '</button>';
         }
-        h += '<div class="te-head"><button type="button" class="tcheck p' + f.priority + '" data-act="taskDone" data-id="' + t.id + '" aria-label="完了にする"></button>' +
+        h += '<div class="te-head"><button type="button" class="tcheck" data-act="taskDone" data-id="' + t.id + '" aria-label="完了にする"></button>' +
           '<input class="input te-title" id="te-title" value="' + esc(f.title) + '" maxlength="120" aria-label="タスク名"></div>';
         h += '<textarea class="input te-note" id="te-note" rows="2" placeholder="メモ" aria-label="メモ">' + esc(f.note) + '</textarea>';
         if (!t.parentId) {
@@ -4926,7 +4958,6 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         h += field('予定日', '<div class="row2"><input type="date" class="input" id="te-date" value="' + f.date + '"><input type="time" class="input" id="te-time" value="' + f.time + '" aria-label="時刻（任意）"></div>', '時刻は任意です。', 'te-date');
         h += field('期限', '<input type="date" class="input" id="te-deadline" value="' + f.deadline + '">', '予定日とは別の締め切りです。', 'te-deadline');
         if (!t.parentId) h += repeatFields(f);
-        h += field('優先度', prioritySeg('tePri', f.priority));
         h += field('ラベル', labelChips(f.labels) + '<div class="row2" style="margin-top:8px"><input class="input" id="te-newlabel" placeholder="新しいラベル" maxlength="20" aria-label="新しいラベル"><button type="button" class="btn" data-act="teAddLabel">作成</button></div>');
         h += field('リマインダー', '<input type="datetime-local" class="input" id="te-rem" value="' + f.reminder + '">', (Native.on ? '指定した日時に、iPhoneの通知でお知らせします。' : 'Web版は、アプリを開いたときにホームでお知らせします。') + notifyDeniedHint(), 'te-rem');
         if (!t.parentId) {
@@ -4992,31 +5023,8 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         return h + '</form>';
       },
     },
-    filterForm: {
-      title: (p) => (p.id ? 'フィルターを編集' : 'フィルターを追加'),
-      body(p) {
-        const f0 = p.id ? filterById(p.id) : null;
-        if (!p.cond) p.cond = clone(f0 ? f0.cond : { when: 'all', priorities: [], labels: [], projects: [], text: '' });
-        const c = p.cond;
-        const tog = (act, v, on, label, style) => '<button type="button" data-act="' + act + '" data-v="' + v + '" aria-pressed="' + on + '"' + (style ? ' style="' + style + '"' : '') + '>' + label + '</button>';
-        let h = '<form data-form="filterForm" novalidate>' + field('名前', '<input class="input" id="ff-name" maxlength="30" autocomplete="off" value="' + esc(f0 ? f0.name : '') + '" placeholder="例：急ぎ" autofocus>', '', 'ff-name');
-        h += field('期間', '<select class="input" id="ff-when" data-change="ffWhen">' + Object.keys(WHEN_LABEL).map((k) => '<option value="' + k + '"' + (c.when === k ? ' selected' : '') + '>' + WHEN_LABEL[k] + '</option>').join('') + '</select>', '', 'ff-when');
-        h += field('優先度（選ばなければすべて）', '<div class="lchips">' + [1, 2, 3, 4].map((x) => tog('ffPri', x, c.priorities.indexOf(x) >= 0, 'P' + x)).join('') + '</div>');
-        h += field('ラベル（どれかが付いている）', '<div class="lchips">' + (todo().labels.length ? todo().labels.slice().sort(byOrder).map((l) => tog('ffLabel', l.id, c.labels.indexOf(l.id) >= 0, '@' + esc(l.name), '--lc:' + (TCOLORS[l.color] || TCOLORS.hai))).join('') : '<span class="hint" style="margin:0">ラベルはまだありません。</span>') + '</div>');
-        h += field('プロジェクト（選ばなければすべて）', '<div class="lchips">' + tog('ffProj', 'inbox', c.projects.indexOf('inbox') >= 0, 'Inbox') + projectsOf(false).map((pr) => tog('ffProj', pr.id, c.projects.indexOf(pr.id) >= 0, esc(pr.name))).join('') + '</div>');
-        h += field('キーワード', '<input class="input" id="ff-text" maxlength="30" autocomplete="off" value="' + esc(c.text || '') + '" data-input="ffText">', '', 'ff-text');
-        h += '<p class="hint" id="ff-count">条件に合うタスク：' + filterCount(c) + '件</p>';
-        h += '<p class="hint bad" id="ff-err" role="alert"></p><div class="btn-row"><button class="btn primary" type="submit">' + (f0 ? '保存する' : '追加する') + '</button></div>';
-        if (f0) h += '<div class="btn-row"><button type="button" class="btn danger" data-act="filterDelete" data-id="' + f0.id + '">フィルターを削除</button></div>';
-        return h + '</form>';
-      },
-    },
   };
 
-  function updateFilterCount(sh) {
-    const el = document.getElementById(sh.id);
-    if (el) el.querySelector('#ff-count').textContent = '条件に合うタスク：' + filterCount(sh.params.cond) + '件';
-  }
   function afterTaskSheetChange(sh) { if (sh) { readDraft(sh); fillSheet(sh); } }
   function completeWithFx(id, el, sh) {
     const t = taskById(id);
@@ -5095,13 +5103,6 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       });
     },
     tnDate(el, sh) { const inp = document.querySelector('#' + sh.id + ' #tn-date'); inp.value = el.dataset.v; sh.params.form.date = el.dataset.v; },
-    tnPri(el, sh) { sh.params.form.priority = +el.dataset.v; pressOne(el); },
-    tePri(el, sh) {
-      sh.params.draft.priority = +el.dataset.v;
-      pressOne(el);
-      const chk = document.querySelector('#' + sh.id + ' .te-head .tcheck');
-      if (chk) chk.className = 'tcheck p' + el.dataset.v;
-    },
     teLabel(el, sh) {
       toggleIn(sh.params.draft.labels, el.dataset.id);
       el.setAttribute('aria-pressed', String(sh.params.draft.labels.indexOf(el.dataset.id) >= 0));
@@ -5138,7 +5139,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       const par = taskById(sh.params.id);
       if (!par) return;
       const order = subtasksOf(par.id).reduce((m, x) => Math.max(m, x.order || 0), -1) + 1;
-      todo().tasks.push({ id: newId('t'), title, note: '', projectId: par.projectId, sectionId: par.sectionId, parentId: par.id, order, priority: 4, labels: [], due: null, deadline: null, repeat: null, reminder: null, reward: 0, done: false, createdAt: Date.now() });
+      todo().tasks.push({ id: newId('t'), title, note: '', projectId: par.projectId, sectionId: par.sectionId, parentId: par.id, order, labels: [], due: null, deadline: null, repeat: null, reminder: null, reward: 0, done: false, createdAt: Date.now() });
       commit(['todo']);
       fillSheet(sh);
       const again = document.querySelector('#' + sh.id + ' #te-newsub');
@@ -5169,6 +5170,37 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       App.ui.todoTab = 'projects';
       App.ui.todoId = p && !p.archived ? p.id : null;
       render();
+    },
+    starterAdd() {
+      const n = E.addTodoStarter(todo());
+      todo().settings.starterAdded = true;
+      commit(['todo']);
+      refreshStarterRow();
+      toast(n ? '初期のプロジェクトとラベルを追加しました' : '追加するものはありません');
+    },
+    starterRemove() {
+      const td = todo();
+      const pres = E.starterPresent(td);
+      const pids = pres.projects.map((p) => p.id);
+      const lids = pres.labels.map((l) => l.id);
+      if (!pids.length && !lids.length) return;
+      const nTasks = td.tasks.filter((x) => pids.indexOf(x.projectId) >= 0 && !x.parentId).length;
+      const nLabeled = td.tasks.filter((x) => (x.labels || []).some((id) => lids.indexOf(id) >= 0)).length;
+      const names = (list, pre) => list.map((x) => '「' + pre + x.name + '」').join('');
+      const what = [pids.length ? 'プロジェクト' + names(pres.projects, '') : '', lids.length ? 'ラベル' + names(pres.labels, '@') : ''].filter(Boolean).join('と');
+      confirmDialog({
+        title: '初期のプロジェクトとラベルを削除しますか？',
+        body: what + 'を削除します。' + (nTasks ? '中のタスク' + nTasks + '件はInboxに移ります。' : '') + (nLabeled ? 'ラベルはタスクから外れます。' : '') + 'あとからこの設定で、また追加できます。',
+        ok: '削除する',
+        danger: true,
+        onOk: () => {
+          E.removeTodoStarter(td);
+          td.settings.starterAdded = true;
+          commit(['todo']);
+          refreshStarterRow();
+          toast('初期のプロジェクトとラベルを削除しました');
+        },
+      });
     },
     pfColor(el, sh) { sh.params.color = el.dataset.v; pressOne(el); },
     lfColor(el, sh) { sh.params.color = el.dataset.v; pressOne(el); },
@@ -5203,7 +5235,6 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
           td.tasks = td.tasks.filter((x) => x.projectId !== p.id);
           td.sections = td.sections.filter((s) => s.projectId !== p.id);
           td.projects = td.projects.filter((x) => x.id !== p.id);
-          td.filters.forEach((f) => { f.cond.projects = (f.cond.projects || []).filter((id) => id !== p.id); });
           App.ui.todoId = null;
           commit(['todo']);
           toast('「' + p.name + '」を削除しました');
@@ -5239,27 +5270,11 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       if (sh) closeSheet(sh.id);
       const td = todo();
       td.tasks.forEach((x) => { x.labels = (x.labels || []).filter((id) => id !== l.id); });
-      td.filters.forEach((f) => { f.cond.labels = (f.cond.labels || []).filter((id) => id !== l.id); });
       td.labels = td.labels.filter((x) => x.id !== l.id);
       App.ui.todoId = null;
       commit(['todo']);
       toast('ラベル「' + l.name + '」を削除しました');
     },
-    filterNew() { openSheet('filterForm', {}); },
-    filterEdit(el) { openSheet('filterForm', { id: el.dataset.id }); },
-    filterOpen(el) { App.ui.todoTab = 'labels'; App.ui.todoId = 'f:' + el.dataset.id; render(); },
-    filterDelete(el, sh) {
-      const f = filterById(el.dataset.id);
-      if (!f) return;
-      if (sh) closeSheet(sh.id);
-      todo().filters = todo().filters.filter((x) => x.id !== f.id);
-      App.ui.todoId = null;
-      commit(['todo']);
-      toast('フィルター「' + f.name + '」を削除しました');
-    },
-    ffPri(el, sh) { toggleIn(sh.params.cond.priorities, +el.dataset.v); el.setAttribute('aria-pressed', String(sh.params.cond.priorities.indexOf(+el.dataset.v) >= 0)); updateFilterCount(sh); },
-    ffLabel(el, sh) { toggleIn(sh.params.cond.labels, el.dataset.v); el.setAttribute('aria-pressed', String(sh.params.cond.labels.indexOf(el.dataset.v) >= 0)); updateFilterCount(sh); },
-    ffProj(el, sh) { toggleIn(sh.params.cond.projects, el.dataset.v); el.setAttribute('aria-pressed', String(sh.params.cond.projects.indexOf(el.dataset.v) >= 0)); updateFilterCount(sh); },
   };
 
   const TODO_FORMS = {
@@ -5276,7 +5291,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       f.proj = form.querySelector('#tn-proj').value;
       f.date = date;
       f.reward = reward;
-      TodoAct.add({ title, projectId: pr.projectId, sectionId: pr.sectionId, priority: f.priority, reward, due: date ? { date } : null, labels: f.label ? [f.label] : [] });
+      TodoAct.add({ title, projectId: pr.projectId, sectionId: pr.sectionId, reward, due: date ? { date } : null, labels: f.label ? [f.label] : [] });
       err.textContent = '';
       titleEl.value = '';
       titleEl.focus();
@@ -5306,7 +5321,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         month: f.rtype === 'yearly' ? dp[1] : undefined,
       } : null;
       const patch = {
-        title, note: String(f.note || '').trim(), priority: f.priority, labels: f.labels.slice(),
+        title, note: String(f.note || '').trim(), labels: f.labels.slice(),
         due: date ? (f.time ? { date, time: f.time } : { date }) : null,
         deadline: f.deadline || null, repeat, reminder: f.reminder || null, reward,
       };
@@ -5378,26 +5393,6 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       closeSheet(sh.id);
       commit(['todo']);
     },
-    filterForm(form, sh) {
-      const name = form.querySelector('#ff-name').value.trim();
-      if (!name) { form.querySelector('#ff-err').textContent = '名前を入力してください。'; return; }
-      const cond = sh.params.cond;
-      cond.text = form.querySelector('#ff-text').value.trim();
-      cond.when = form.querySelector('#ff-when').value;
-      const td = todo();
-      let id = sh.params.id;
-      if (id) {
-        const f = filterById(id);
-        if (f) { f.name = name; f.cond = clone(cond); }
-      } else {
-        id = newId('f');
-        td.filters.push({ id, name, cond: clone(cond), order: td.filters.length });
-      }
-      closeSheet(sh.id);
-      App.ui.todoTab = 'labels';
-      App.ui.todoId = 'f:' + id;
-      commit(['todo']);
-    },
     todoSettings(form, sh) {
       const v = toInt(form.querySelector('#tds-reward').value);
       if (!(v >= 0 && v <= 5000)) { form.querySelector('#tds-err').textContent = '0〜5000 の整数で入力してください。'; return; }
@@ -5410,11 +5405,9 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
 
   const TODO_CHANGES = {
     teRepeat(el, sh) { readDraft(sh); sh.params.draft.rtype = el.value; fillSheet(sh); },
-    ffWhen(el, sh) { sh.params.cond.when = el.value; updateFilterCount(sh); },
   };
   const TODO_INPUTS = {
     tsQuery(el, sh) { sh.params.q = el.value; refreshSearch(sh); },
-    ffText(el, sh) { sh.params.cond.text = el.value.trim(); updateFilterCount(sh); },
   };
 
   /** ホームのお知らせ：時刻を過ぎたタスクのリマインダー */
@@ -5440,7 +5433,30 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     return '<section class="set-group"><h3>ToDo</h3><form class="set-card" data-form="todoSettings" novalidate>' +
       '<div class="set-row"><div><b><label for="tds-reward">新しいタスクの報酬（初期値）</label></b><p class="hint">タスクごとに変えられます。習慣と同じ1日の報酬上限で数えます。</p></div><div class="unit" data-unit="kcal"><input class="input" id="tds-reward" inputmode="numeric" value="' + todo().settings.defaultReward + '"></div></div>' +
       '<div class="set-row"><p class="hint bad" id="tds-err" role="alert" style="margin:0"></p><button class="btn primary" type="submit">保存</button></div></form>' +
+      '<div class="set-card">' + starterRow() + '</div>' +
       '<p class="hint">Todoistとの同期は、まだ対応していません。</p></section>';
+  }
+  /** 設定：初期のプロジェクトとラベル（GTD）。まとめて削除・追加できる（1つずつなら、それぞれの編集画面から削除） */
+  function starterRow() {
+    const td = todo();
+    const pres = E.starterPresent(td);
+    const miss = E.starterMissing(td);
+    const has = pres.projects.length + pres.labels.length;
+    const can = miss.projects.length + miss.labels.length;
+    const nw = (s) => '<span style="white-space:nowrap">' + esc(s) + '</span>';
+    const names = E.TODO_STARTER.projects.map((x) => nw(x.name)).join('・') + ' と ' + E.TODO_STARTER.labels.map((x) => nw('@' + x.name)).join('・');
+    const btns = (can ? '<button type="button" class="btn-s" data-act="starterAdd">追加</button>' : '') +
+      (has ? '<button type="button" class="btn-s danger-text" data-act="starterRemove">削除</button>' : '');
+    return '<div class="set-row" id="todo-starter"><div><b>初期のプロジェクトとラベル</b><p class="hint">GTDの形：' + names +
+      (!has ? '（削除済み）' : can ? '（一部を削除済み）' : '') + '</p></div>' + (btns ? '<span class="row-actions">' + btns + '</span>' : '') + '</div>';
+  }
+  /** 設定画面の「初期のプロジェクトとラベル」の行だけを書き直す（入力中のほかの欄はそのまま） */
+  function refreshStarterRow() {
+    const row = document.getElementById('todo-starter');
+    if (!row) return;
+    const tmp = document.createElement('div');
+    tmp.innerHTML = starterRow();
+    row.replaceWith(tmp.firstChild);
   }
 
 
@@ -5945,7 +5961,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   }
   function started() {
     if (!App.data) enterSample();
-    if (!Account.usable() || !Account.knownSignedIn()) ensureLoginMode(); // ログイン中は、最初の同期のあとで
+    if (!Account.usable() || !Account.knownSignedIn()) { ensureLoginMode(); ensureTodoStarter(); } // ログイン中は、最初の同期のあとで
     render();
     hideSplash();
     claimLogin();
