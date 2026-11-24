@@ -4546,9 +4546,9 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   }
   function todoCard(c, d, t) {
     if (d !== t) return todoPastCard(c, d);
-    const tab = App.ui.todoTab || 'today';
+    const tab = App.ui.todoTab || 'inbox'; // 最初に開くのは Inbox
     const counts = { today: todayCount(t), inbox: topLive().filter((x) => !x.projectId).length };
-    const tabs = [['today', '今日'], ['inbox', 'Inbox'], ['upcoming', '近日予定'], ['projects', 'プロジェクト'], ['labels', 'ラベル・フィルター']];
+    const tabs = [['inbox', 'Inbox'], ['today', '今日'], ['upcoming', '近日予定'], ['projects', 'プロジェクト'], ['labels', 'ラベル・フィルター']];
     let body;
     if (tab === 'inbox') body = viewInbox();
     else if (tab === 'upcoming') body = viewUpcoming(t);
@@ -4676,7 +4676,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   function viewDone() {
     const all = allComps();
     const limit = App.ui.todoDoneLimit || 50;
-    let h = '<div class="tnav"><button class="link-btn" data-act="todoTab" data-tab="today">' + IC.left + '今日</button></div>' + secHead('完了履歴', '<span class="tsec-sub">' + all.length + '件</span>');
+    let h = '<div class="tnav"><button class="link-btn" data-act="todoTab" data-tab="inbox">' + IC.left + 'Inbox</button></div>' + secHead('完了履歴', '<span class="tsec-sub">' + all.length + '件</span>');
     if (!all.length) return h + '<p class="empty">完了したタスクはまだありません。</p>';
     let cur = '';
     let open = false;
@@ -4878,7 +4878,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       title: () => 'タスクを追加',
       body(p) {
         const t = today();
-        const tab = App.ui.todoTab || 'today';
+        const tab = App.ui.todoTab || 'inbox';
         if (!p.form) {
           const inView = tab === 'projects' && App.ui.todoId ? App.ui.todoId : '';
           const proj = p.project || inView;
