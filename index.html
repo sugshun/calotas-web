@@ -12,6 +12,7 @@
 <meta name="theme-color" content="#ffffff">
 <style>
 :root {
+  --kb-gap: 10px; /* キーボードとシートの中身のあいだに、少しだけ空ける */
   /* カロタス：Todoistに限りなく寄せた見た目。白い地に細い区切り線、赤は追加・主な操作・選択中だけ。
      日付の色（今日＝緑、明日＝橙、今週＝紫、期限切れ＝赤）もTodoistと同じ考え方。金は報酬kcalだけに使う。 */
   --bg: #ffffff;
@@ -164,6 +165,8 @@ body.has-fab #app { padding-bottom: calc(156px + env(safe-area-inset-bottom)); }
 }
 body.scrolled .topbar { border-bottom-color: var(--line); }
 .tb-nav { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.tb-acts { display: flex; align-items: center; gap: 0; }
+.tb-acts .icon-btn[aria-current="page"] { color: var(--shu-text); }
 .tb-title {
   position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
   font-size: 15px; font-weight: 700; white-space: nowrap;
@@ -586,15 +589,15 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; backgroun
 .sheet-head h2 { font-size: 17px; font-weight: 700; margin: 0; line-height: 1.35; }
 .sheet-head .sub { display: block; font-size: 12.5px; color: var(--ink-2); font-weight: 400; }
 .sheet-body { overflow: auto; padding: 2px 20px 24px; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
-.sheet [hidden] { display: none !important; }
+.sheet [hidden] { display: none !important; } /* .wds や .row2 の display より優先して隠す */
 /* カロリーのタブ：今日のカロリーの下に、履歴（カレンダー）を続ける */
 .hist-title { font-size: 20px; font-weight: 700; margin: 34px 0 0; padding-top: 18px; border-top: 1px solid var(--line); }
-.hist-hint { margin: 4px 0 2px; } /* .wds や .row2 の display より優先して隠す */
+.hist-hint { margin: 4px 0 2px; }
 /* キーボード（iPhoneアプリ）：出ている間は、シートの下にキーボードの高さ（--kb）ぶんの余白を足し、入力欄をキーボードの上に出す。
    --kb はキーボードが動き始める知らせで変わる（native.js の Kb）ので、シートはキーボードと一緒に動く。
    余白はシートの背景色なので、キーボードの後ろもシートが続いて見える。高さの上限は「キーボードより上の90%」にそろえる */
 html.app .sheet, html.app .layer { transition: padding-bottom 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), max-height 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
-html.kb-open .sheet { padding-bottom: max(var(--kb), env(safe-area-inset-bottom)); max-height: calc(90% + 0.1 * var(--kb)); }
+html.kb-open .sheet { padding-bottom: calc(max(var(--kb), env(safe-area-inset-bottom)) + var(--kb-gap)); max-height: calc(90% + 0.1 * var(--kb)); }
 html.kb-open .sheet.full { height: calc(94% + 0.06 * var(--kb)); }
 @keyframes up { from { transform: translateY(100%); } }
 @keyframes fade { from { opacity: 0; } }
@@ -828,17 +831,20 @@ html.app.kb-open .toast { bottom: calc(12px + var(--kb)); }
 @keyframes bonus-pulse { 0% { box-shadow: 0 0 0 0 rgba(240, 165, 54, 0.6); } 100% { box-shadow: 0 0 0 10px rgba(240, 165, 54, 0); } }
 
 /* ===== ToDo ===== */
-.ttabs-bar { display: flex; align-items: center; margin: 0 -20px 0; padding-top: 8px; }
-.ttabs { flex: 1; min-width: 0; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; padding: 2px 6px 2px 20px; }
-.ttools { flex: none; display: flex; padding-right: 10px; border-left: 1px solid var(--line); padding-left: 2px; }
-.ttools .icon-btn { color: var(--ink-2); width: 40px; height: 40px; }
-.ttools .icon-btn[aria-current="page"] { color: var(--shu-text); }
+.ttabs-bar { display: flex; align-items: center; margin: 0 -20px 0; padding-top: 4px; }
+/* 「今日」までは、ずらさなくても見える幅に収める（その先の「近日予定」は横にずらす） */
+.ttabs { flex: 1; min-width: 0; display: flex; gap: 0; overflow-x: auto; scrollbar-width: none; padding: 2px 16px 2px 14px;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 12px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 12px), transparent); }
 .ttabs::-webkit-scrollbar { display: none; }
-.ttab { flex: none; display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; color: var(--ink); border-radius: 6px; padding: 7px 10px 7px 8px; font-size: 14px; font-weight: 500; }
+.ttab { flex: none; display: inline-flex; align-items: center; gap: 5px; border: 0; background: none; color: var(--ink); border-radius: 6px; padding: 7px 8px 7px 6px; font-size: 14px; font-weight: 500; white-space: nowrap; }
 .ttab svg.ic { width: 18px; height: 18px; color: var(--ink-2); stroke-width: 1.6; }
 .ttab span { font-size: 12px; font-weight: 500; color: var(--ink-3); font-variant-numeric: tabular-nums; }
 .ttab[aria-selected="true"] { background: var(--shu-soft); color: var(--shu-text); font-weight: 600; }
 .ttab[aria-selected="true"] svg.ic, .ttab[aria-selected="true"] span { color: var(--shu-text); }
+@media (max-width: 385px) {
+  .ttabs { padding-left: 12px; }
+  .ttab { padding: 7px 6px 7px 5px; gap: 4px; }
+}
 /* 画面の見出し（Todoist：大きな題名＋件数） */
 .tv-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin: 16px 0 2px; }
 .tv-title { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; margin: 0; line-height: 1.25; }
@@ -1074,7 +1080,8 @@ html.app.kb-open .toast { bottom: calc(12px + var(--kb)); }
 @media (max-width: 360px) {
   #app { padding-left: 16px; padding-right: 16px; }
   .topbar { margin: 0 -16px; }
-  .ttabs { margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+  .ttabs-bar { margin: 0 -16px; }
+  .ttabs { padding-left: 10px; padding-right: 12px; }
   .remain-num { font-size: 46px; }
   .bank-cell .val { font-size: 22px; }
   .stat .val { font-size: 20px; }
@@ -2644,7 +2651,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     const c = ctx();
     const t = c.today;
     return '<header class="topbar"><div class="tb-nav"></div><span class="tb-title always" aria-hidden="true">ToDo</span>' +
-      '<button class="icon-btn" data-act="settings" aria-label="設定">' + IC.gear + '</button></header><h1 class="sr-only">ToDo</h1>' +
+      '<div class="tb-acts">' + todoTools() + '<button class="icon-btn" data-act="settings" aria-label="設定">' + IC.gear + '</button></div></header><h1 class="sr-only">ToDo</h1>' +
       noticesHome(c, t, t, c.day(t), 'todo') + todoCard(c, t, t);
   }
   /** カロリー：選んだ日（ふだんは今日）の残り・報酬と貯金・食事、その下に履歴のカレンダー */
@@ -5012,8 +5019,9 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     (sub ? '<p class="tv-sub">' + sub + '</p>' : '') + '</div>' + (side || '') + '</div>';
   const countSub = (n) => (n ? IC.task + n + '件のタスク' : '');
   // 検索と完了済みは、どの画面からでも開けるよう、タブの右端に置く
-  const viewTools = () => '<div class="ttools"><button class="icon-btn" data-act="todoSearch" aria-label="検索">' + IC_SEARCH + '</button>' +
-    '<button class="icon-btn" data-act="todoTab" data-tab="done" aria-label="完了済みのタスク"' + (App.ui.todoTab === 'done' ? ' aria-current="page"' : '') + '>' + IC.task + '</button></div>';
+  /** 検索と完了済み：ToDoタブの上の帯（設定の左）に置く。どの表示からでも押せる */
+  const todoTools = () => '<button class="icon-btn" data-act="todoSearch" aria-label="検索">' + IC_SEARCH + '</button>' +
+    '<button class="icon-btn" data-act="todoTab" data-tab="done" aria-label="完了済みのタスク"' + (App.ui.todoTab === 'done' ? ' aria-current="page"' : '') + '>' + IC.task + '</button>';
   /** 「＋ タスクを追加」（一覧の終わりに置く。Todoistと同じ） */
   const addLine = (attrs) => '<button class="add-line" data-act="taskNew"' + (attrs || '') + '><span class="al-plus">' + IC.plus + '</span>タスクを追加</button>';
 
@@ -5022,7 +5030,8 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     if (d !== t) return todoPastCard(c, d);
     const tab = App.ui.todoTab || 'inbox'; // 最初に開くのは Inbox
     const counts = { today: todayCount(t), inbox: topLive().filter((x) => !x.projectId).length };
-    const tabs = [['inbox', 'Inbox', MI.inbox], ['today', '今日', todayIcon(t)], ['upcoming', '近日予定', MI.upcoming], ['projects', 'プロジェクト', MI.hash], ['labels', 'ラベル', MI.tag]];
+    // 並び：Inbox → プロジェクト → ラベル → 今日 → 近日予定（「今日」までは横にずらさなくても見える）
+    const tabs = [['inbox', 'Inbox', MI.inbox], ['projects', 'プロジェクト', MI.hash], ['labels', 'ラベル', MI.tag], ['today', '今日', todayIcon(t)], ['upcoming', '近日予定', MI.upcoming]];
     let body;
     if (tab === 'inbox') body = viewInbox();
     else if (tab === 'upcoming') body = viewUpcoming(t);
@@ -5032,7 +5041,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     else body = viewToday(c, t);
     return '<section class="card todo" aria-label="ToDo"><div class="ttabs-bar"><div class="ttabs" role="tablist" aria-label="ToDoの表示">' +
       tabs.map((x) => '<button role="tab" class="ttab" aria-selected="' + (tab === x[0]) + '" data-act="todoTab" data-tab="' + x[0] + '">' + x[2] + x[1] +
-        (counts[x[0]] ? '<span>' + counts[x[0]] + '</span>' : '') + '</button>').join('') + '</div>' + viewTools() + '</div>' +
+        (counts[x[0]] ? '<span>' + counts[x[0]] + '</span>' : '') + '</button>').join('') + '</div></div>' +
       '<div class="tbody">' + body + '</div></section>';
   }
   function todoPastCard(c, d) {
