@@ -407,6 +407,9 @@ body.scrolled .tb-title { opacity: 1; }
   background: none; border: 0; text-align: left;
 }
 .habit-btn svg.stamp { width: 32px; height: 32px; }
+.habit-btn { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.habit-btn.pressing { opacity: 0.6; transition: opacity 0.45s ease-in; }
+@media (prefers-reduced-motion: reduce) { .habit-btn.pressing { transition: none; } }
 .stamps { display: flex; align-items: center; gap: 0; }
 .stamps svg.stamp + svg.stamp { margin-left: -8px; }
 .stamps .more { font-size: 11px; color: var(--ink-2); margin-left: 3px; }
@@ -2546,10 +2549,10 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         const pt = c.dayPotential(d);
         html += '<div class="rate"><div class="rate-num nums">' + p + '<small>%</small></div><div class="rate-side"><span>' + r.done + ' / ' + r.targets +
           ' 件が25%以上 ・ <b class="rate-pot">+' + fmt(pt.targetEarned) + ' / ' + fmt(pt.targetMax) + ' kcal</b></span><div class="progress" role="progressbar" aria-label="達成率" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + p + '"><i style="width:' + p + '%"></i></div></div>' +
-          '<button class="link-btn" data-act="manager">管理</button></div>';
+          '<button class="link-btn" data-act="manager">編集</button></div>';
         html += '<ul class="habit-list">' + target.map((h) => habitRow(c, h, d, t, 'target')).join('') + '</ul>';
       } else {
-        html += '<div class="rate empty-rate"><span class="muted">この日が対象の「毎日・曜日指定」の習慣はありません。</span><button class="link-btn" data-act="manager">管理</button></div>';
+        html += '<div class="rate empty-rate"><span class="muted">この日が対象の「毎日・曜日指定」の習慣はありません。</span><button class="link-btn" data-act="manager">編集</button></div>';
       }
       if (weekly.length) {
         html += '<h3 class="sub-head">週の目標<span>達成率には含めません</span></h3><ul class="habit-list">' +
@@ -2588,7 +2591,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       ? '<b>+' + fmt(hd.kcal) + '</b><small>kcal</small>'
       : '<b class="zero">0</b><small>最大 ' + fmt(v.reward * maxN) + '</small>';
     return '<li class="habit-row" data-habit-row="' + h.id + '"><button class="habit-btn" data-act="habit" data-id="' + h.id + '" data-date="' + d + '" aria-label="' +
-      esc(h.name) + '、' + lab + '。タップして達成度を記録"><span class="stamps">' + stamps + '</span><span class="habit-text"><span class="habit-name">' +
+      esc(h.name) + '、' + lab + '。タップして達成度を記録、長押しで編集"><span class="stamps">' + stamps + '</span><span class="habit-text"><span class="habit-name">' +
       esc(h.name) + '</span><span class="habit-meta">' + meta.join('') + '</span></span><span class="habit-kcal">' + kc + '</span></button></li>';
   }
 
@@ -2989,12 +2992,12 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     manager: {
       live: true,
       full: true,
-      title: () => '習慣の管理',
+      title: () => '習慣の編集',
       body() {
         const t = today();
         const act = habits().filter((h) => !E.archivedAt(h, t));
         const arc = habits().filter((h) => E.archivedAt(h, t));
-        let html = '<p class="hint" style="margin-top:0">左の ⋮⋮ をドラッグして並び替えます（ホームの表示順になります）。名前をタップすると編集できます。</p>';
+        let html = '<p class="hint" style="margin-top:0">左の ⋮⋮ をドラッグして並び替えます（ホームの表示順になります）。名前をタップすると編集できます（ホームで習慣を長押ししても開けます）。</p>';
         html += act.length ? '<ul class="mgr-list" id="mgr-list">' + act.map((h) => {
           const v = E.versionAt(h, t) || h.versions[h.versions.length - 1];
           return '<li class="mgr-item" data-id="' + h.id + '"><button class="grip" data-grip="1" aria-label="' + esc(h.name) + 'を並び替え。上下の矢印キーでも移動できます">' + IC.grip + '</button>' +
@@ -3236,7 +3239,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     },
   };
 
-  // 並び替え（指でもマウスでも）。習慣の管理と、ToDoの一覧（Inbox・プロジェクト）で使う
+  // 並び替え（指でもマウスでも）。習慣の編集と、ToDoの一覧（Inbox・プロジェクト）で使う
   const sortItems = (list) => Array.from(list.children).filter((x) => x.matches('.mgr-item, .sortable-item'));
   function saveOrder(list) {
     const ids = sortItems(list).map((x) => x.dataset.id);
@@ -5691,7 +5694,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       if (!h) return;
       confirmDialog({
         title: '「' + h.name + '」をアーカイブしますか？',
-        body: '今日から一覧に表示しません。過去の記録と貯金は残り、習慣の管理からいつでも元に戻せます。',
+        body: '今日から一覧に表示しません。過去の記録と貯金は残り、習慣の編集からいつでも元に戻せます。',
         ok: 'アーカイブする',
         onOk: () => {
           closeSheet(sh.id);
@@ -5949,6 +5952,51 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       el.value = '';
     },
   };
+
+  // 習慣を長押し（PCでは右クリックも）すると、その習慣の編集を開く。ふつうに押したときは今までどおり記録
+  const LongPress = { timer: 0, x: 0, y: 0, el: null, fired: false };
+  function lpCancel() {
+    clearTimeout(LongPress.timer);
+    if (LongPress.el) LongPress.el.classList.remove('pressing');
+    LongPress.el = null;
+  }
+  function lpOpen(el) {
+    lpCancel();
+    LongPress.fired = true;
+    const id = el.dataset.id;
+    if (App.data && habitById(id)) openSheet('habitForm', { id });
+  }
+  document.addEventListener('pointerdown', (ev) => {
+    LongPress.fired = false;
+    const el = ev.target.closest('.habit-btn[data-id]');
+    if (!el || (ev.pointerType === 'mouse' && ev.button !== 0)) return;
+    lpCancel();
+    LongPress.el = el;
+    LongPress.x = ev.clientX;
+    LongPress.y = ev.clientY;
+    el.classList.add('pressing');
+    LongPress.timer = setTimeout(() => lpOpen(el), 500);
+  });
+  document.addEventListener('pointermove', (ev) => {
+    if (LongPress.el && Math.hypot(ev.clientX - LongPress.x, ev.clientY - LongPress.y) > 10) lpCancel(); // 指が動いた（スクロールなど）
+  });
+  document.addEventListener('pointerup', lpCancel, true);
+  document.addEventListener('pointercancel', lpCancel, true);
+  document.addEventListener('contextmenu', (ev) => {
+    const el = ev.target.closest('.habit-btn[data-id]');
+    if (!el) return;
+    ev.preventDefault();
+    if (!LongPress.fired) lpOpen(el); // 長押しで開いた直後なら、もう一度は開かない
+  });
+  // 長押しで開いたあと、指を離したときの「押した」は何にも使わない
+  // （記録にしない。iPhoneでは指の下が開いたシートの外側になり、閉じてしまうこともあるため。キーボードで押したときは別）
+  document.addEventListener('click', (ev) => {
+    if (LongPress.fired && ev.detail !== 0) {
+      LongPress.fired = false;
+      ev.preventDefault();
+      ev.stopPropagation();
+    }
+  }, true);
 
   document.addEventListener('click', (ev) => {
     const el = ev.target.closest('[data-act]');
