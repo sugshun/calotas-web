@@ -572,6 +572,12 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; backgroun
 .sheet-head h2 { font-size: 18px; font-weight: 800; margin: 0; line-height: 1.35; }
 .sheet-head .sub { display: block; font-size: 12.5px; color: var(--ink-2); font-weight: 400; }
 .sheet-body { overflow: auto; padding: 2px 20px 24px; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+/* キーボード（iPhoneアプリ）：出ている間は、シートの下にキーボードの高さ（--kb）ぶんの余白を足し、入力欄をキーボードの上に出す。
+   --kb はキーボードが動き始める知らせで変わる（native.js の Kb）ので、シートはキーボードと一緒に動く。
+   余白はシートの背景色なので、キーボードの後ろもシートが続いて見える。高さの上限は「キーボードより上の90%」にそろえる */
+html.app .sheet, html.app .layer { transition: padding-bottom 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), max-height 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+html.kb-open .sheet { padding-bottom: max(var(--kb), env(safe-area-inset-bottom)); max-height: calc(90% + 0.1 * var(--kb)); }
+html.kb-open .sheet.full { height: calc(94% + 0.06 * var(--kb)); }
 @keyframes up { from { transform: translateY(100%); } }
 @keyframes fade { from { opacity: 0; } }
 @media (min-width: 720px) {
@@ -580,6 +586,10 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; backgroun
   .sheet::before { display: none; }
   .sheet.full { height: 86%; }
   @keyframes up { from { transform: translateY(24px); opacity: 0; } }
+  /* 広い画面（iPad）は中央のダイアログなので、キーボードより上の範囲の中央に置く */
+  html.kb-open .layer { padding-bottom: var(--kb); }
+  html.kb-open .sheet { padding-bottom: 0; max-height: 86%; }
+  html.kb-open .sheet.full { height: 86%; }
 }
 
 .field { display: grid; gap: 6px; margin: 16px 0 0; }
@@ -789,6 +799,7 @@ textarea.input { min-height: 120px; font-family: ui-monospace, Menlo, monospace;
 .toast.show { opacity: 1; transform: none; pointer-events: auto; }
 body.has-fab .toast { bottom: calc(146px + env(safe-area-inset-bottom)); }
 body.sheet-open .toast { bottom: calc(20px + env(safe-area-inset-bottom)); }
+html.app.kb-open .toast { bottom: calc(12px + var(--kb)); }
 .toast button { flex: none; background: none; border: 0; color: #ff8a7d; font-weight: 800; padding: 4px; }
 /* ログインボーナス：金色の帯で少しだけ目立たせる */
 .toast.bonus { background: #3a2a0c; color: #ffe2a8; font-weight: 700; box-shadow: 0 8px 24px rgba(168, 109, 16, 0.35); }
@@ -2109,6 +2120,54 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     document.documentElement.classList.add('app');
     const vp = document.querySelector('meta[name="viewport"]');
     if (vp) vp.setAttribute('content', 'width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no');
+  }
+
+  /** キーボード（iPhoneアプリ）。
+   *  画面の大きさは変えない（capacitor.config.json の Keyboard.resize は none）。キーボードが動き始める知らせ
+   *  （keyboardWillShow）で高さを --kb に入れると、シートがその分だけ下に余白を足して、キーボードと一緒に上がる。
+   *  以前の resize: native は、キーボードが出きってからさらに0.2秒待って画面を縮めるため、
+   *  入力欄が一度キーボードに隠れてから、シートが跳ね上がっていた。 */
+  const Kb = {
+    h: 0,
+    timer: 0,
+    set(px) {
+      const h = Math.max(0, Math.round(Number(px) || 0));
+      if (h === this.h) return;
+      this.h = h;
+      const root = document.documentElement;
+      root.style.setProperty('--kb', h + 'px');
+      root.classList.toggle('kb-open', h > 0);
+      clearTimeout(this.timer);
+      if (h > 0) this.timer = setTimeout(revealFocused, 320); // シートが上がりきってから
+    },
+  };
+  const isField = (el) => !!el && typeof el.matches === 'function' && el.matches('input, textarea, select');
+  /** 入力中の欄が、シートの見えている部分（キーボードより上）から外れていたら、シートの中をスクロールして見せる */
+  function revealFocused() {
+    const el = document.activeElement;
+    const body = isField(el) && el.closest('.sheet-body');
+    if (!body) return;
+    const r = el.getBoundingClientRect();
+    const b = body.getBoundingClientRect();
+    const top = b.top + 8;
+    const bottom = Math.min(b.bottom, window.innerHeight - Kb.h) - 12;
+    if (r.bottom > bottom) body.scrollTop += Math.max(0, Math.min(r.bottom - bottom, r.top - top));
+    else if (r.top < top) body.scrollTop -= top - r.top;
+  }
+  if (Native.on) {
+    // プラグインは同じ知らせを2つの通り道で送る（window のイベントと、Capacitor.addListener）。どちらで届いてもよい
+    const KB_EVENTS = { keyboardWillShow: true, keyboardDidShow: true, keyboardWillHide: false, keyboardDidHide: false };
+    for (const name of Object.keys(KB_EVENTS)) {
+      const handle = (d) => Kb.set(KB_EVENTS[name] ? d && d.keyboardHeight : 0);
+      window.addEventListener(name, handle);
+      try {
+        if (typeof window.Capacitor.addListener === 'function') window.Capacitor.addListener('Keyboard', name, handle);
+      } catch (e) { /* window のイベントだけで動く */ }
+    }
+    // 念のため：入力欄から離れたのに「閉じた」知らせが来なかったときも、余白を残さない
+    document.addEventListener('focusout', () => {
+      setTimeout(() => { if (Kb.h && !isField(document.activeElement)) Kb.set(0); }, 600);
+    });
   }
   function notifyDeniedHint() {
     if (!Native.on || Notify.state !== 'denied') return '';
