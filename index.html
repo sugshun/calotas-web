@@ -169,7 +169,7 @@ body.scrolled .topbar { border-bottom-color: var(--line); }
   font-size: 15px; font-weight: 700; white-space: nowrap;
   opacity: 0; transition: opacity 0.2s; pointer-events: none;
 }
-body.scrolled .tb-title { opacity: 1; }
+body.scrolled .tb-title, .tb-title.always { opacity: 1; }
 .page-head { margin: 2px 0 0; font-size: inherit; font-weight: inherit; display: grid; }
 .date-btn { display: grid; justify-items: start; gap: 2px; background: none; border: 0; padding: 0; text-align: left; border-radius: 8px; }
 .date-rel { font-size: 28px; font-weight: 800; line-height: 1.2; letter-spacing: -0.01em; }
@@ -538,7 +538,7 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; backgroun
   border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom);
 }
-.tabbar-inner { position: relative; max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; }
+.tabbar-inner { position: relative; max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); }
 .tab {
   display: grid; justify-items: center; gap: 1px;
   padding: 7px 0 7px; background: none; border: 0;
@@ -586,7 +586,10 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; backgroun
 .sheet-head h2 { font-size: 17px; font-weight: 700; margin: 0; line-height: 1.35; }
 .sheet-head .sub { display: block; font-size: 12.5px; color: var(--ink-2); font-weight: 400; }
 .sheet-body { overflow: auto; padding: 2px 20px 24px; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
-.sheet [hidden] { display: none !important; } /* .wds や .row2 の display より優先して隠す */
+.sheet [hidden] { display: none !important; }
+/* カロリーのタブ：今日のカロリーの下に、履歴（カレンダー）を続ける */
+.hist-title { font-size: 20px; font-weight: 700; margin: 34px 0 0; padding-top: 18px; border-top: 1px solid var(--line); }
+.hist-hint { margin: 4px 0 2px; } /* .wds や .row2 の display より優先して隠す */
 /* キーボード（iPhoneアプリ）：出ている間は、シートの下にキーボードの高さ（--kb）ぶんの余白を足し、入力欄をキーボードの上に出す。
    --kb はキーボードが動き始める知らせで変わる（native.js の Kb）ので、シートはキーボードと一緒に動く。
    余白はシートの背景色なので、キーボードの後ろもシートが続いて見える。高さの上限は「キーボードより上の90%」にそろえる */
@@ -2085,6 +2088,9 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     cal: svg('<rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><line x1="16" y1="2.5" x2="16" y2="6.5"/><line x1="8" y1="2.5" x2="8" y2="6.5"/><line x1="3" y1="10" x2="21" y2="10"/>'),
     grip: '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="stroke:none;fill:currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>',
     chev: svg('<polyline points="9 18 15 12 9 6"/>', 'chev'),
+    habitTab: svg('<circle cx="12" cy="12" r="8.5"/><polyline points="8.5 12.3 11 14.8 15.8 9.8"/><path d="M12 1.8v1.6M12 20.6v1.6M1.8 12h1.6M20.6 12h1.6" stroke-width="1.6"/>'),
+    todoTab: svg('<polyline points="3.5 6.5 5.2 8.2 8 5.2"/><line x1="11" y1="6.8" x2="20.5" y2="6.8"/><polyline points="3.5 12.3 5.2 14 8 11"/><line x1="11" y1="12.6" x2="20.5" y2="12.6"/><polyline points="3.5 18.1 5.2 19.8 8 16.8"/><line x1="11" y1="18.4" x2="20.5" y2="18.4"/>'),
+    kcalTab: svg('<path d="M12 2.8c1.7 3.9 6.7 6.1 6.7 11.6a6.7 6.7 0 0 1-13.4 0c0-2.6 1.1-4.4 2.6-5.8.2 1.9 1.1 3.2 2.4 3.8C10.1 9.1 10.4 5.5 12 2.8z"/>'),
     more: '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="stroke:none;fill:currentColor"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>',
     section: svg('<rect x="3.5" y="4" width="17" height="6" rx="1.5"/><line x1="4" y1="14.5" x2="20" y2="14.5"/><line x1="4" y1="19" x2="14" y2="19"/>'),
     pencil: svg('<path d="M4 20h4L19 9l-4-4L4 16z"/><line x1="13.5" y1="6.5" x2="17.5" y2="10.5"/>'),
@@ -2126,7 +2132,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     data: null, // { core, months: { 'YYYY-MM': { entries, meals, withdrawals, confirmed } }, todo, comps: { 'YYYY-MM': { completions } }, logins: { 'YYYY-MM': { days } } }
     sample: false,
     rev: 0,
-    ui: { tab: 'home', viewDate: null, remainOpen: false, mealsOpen: false, histMonth: null, histSel: null },
+    ui: { tab: 'habit', viewDate: null, remainOpen: false, mealsOpen: false, histMonth: null, histSel: null },
     sync: { state: 'idle' },
     sheets: [],
     loadSlow: false,
@@ -2500,6 +2506,21 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       h.status = E.pushDated(h.status || [], today(), { archived });
       commit(['core']);
     },
+    /** 習慣を削除する（一覧からもアーカイブからも消す）。記録はそれぞれ報酬を持っているので、
+     *  これまでにもらった報酬と貯金は変わらない。元に戻すための情報を返す */
+    deleteHabit(id) {
+      const list = App.data.core.habits;
+      const i = list.findIndex((h) => h.id === id);
+      if (i < 0) return null;
+      const h = list.splice(i, 1)[0];
+      commit(['core']);
+      return { h, i };
+    },
+    undeleteHabit(rem) {
+      if (!rem || habitById(rem.h.id)) return;
+      App.data.core.habits.splice(Math.min(rem.i, App.data.core.habits.length), 0, rem.h);
+      commit(['core']);
+    },
     reorder(ids) {
       const rest = App.data.core.habits.filter((h) => ids.indexOf(h.id) < 0).sort((a, b) => a.order - b.order);
       ids.forEach((id, i) => { const h = habitById(id); if (h) h.order = i; });
@@ -2566,8 +2587,12 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       return;
     }
     bar.hidden = false;
-    document.body.classList.toggle('has-fab', App.ui.tab !== 'history');
-    view.innerHTML = App.ui.tab === 'history' ? viewHistory() : viewHome();
+    // 以前のタブ名（ホーム・履歴）で保存されていても、新しいタブに読み替える
+    if (App.ui.tab === 'home') App.ui.tab = App.ui.homeSeg === 'todo' ? 'todo' : 'habit';
+    else if (App.ui.tab === 'history') App.ui.tab = 'kcal';
+    else if (['habit', 'todo', 'kcal'].indexOf(App.ui.tab) < 0) App.ui.tab = 'habit';
+    document.body.classList.add('has-fab');
+    view.innerHTML = App.ui.tab === 'kcal' ? viewKcal() : App.ui.tab === 'todo' ? viewTodo() : viewHabit();
     bar.innerHTML = viewTabbar();
     showSelectedTodoTab();
     refreshSheets();
@@ -2589,10 +2614,10 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   function viewTabbar() {
     const t = App.ui.tab;
     const tab = (k, ic, label) => '<button class="tab" data-act="tab" data-tab="' + k + '"' + (t === k ? ' aria-current="page"' : '') + '>' + ic + '<span>' + label + '</span></button>';
-    // 右下の＋：ToDoを見ているときは、Todoistと同じくすぐタスクの追加を開く。習慣のときは追加メニュー
-    const todoFab = App.ui.homeSeg === 'todo' && viewDate() === today();
-    const fab = t === 'home' ? '<button class="fab" data-act="' + (todoFab ? 'taskNew' : 'addMenu') + '" aria-label="' + (todoFab ? 'タスクを追加' : '追加する（タスク・食事・習慣）') + '">' + IC.plus + '</button>' : '';
-    return '<div class="tabbar-inner">' + fab + tab('home', IC.home, 'ホーム') + tab('history', IC.cal, '履歴') + '</div>';
+    // 右下の＋：そのタブでいちばん追加するもの（ToDo＝タスク、カロリー＝食事）。習慣は追加メニュー
+    const fab = t === 'todo' ? ['taskNew', 'タスクを追加'] : t === 'kcal' ? ['mealNew', '食事を追加'] : ['addMenu', '追加する（習慣・食事・タスク）'];
+    return '<div class="tabbar-inner">' + '<button class="fab" data-act="' + fab[0] + '" aria-label="' + fab[1] + '">' + IC.plus + '</button>' +
+      tab('habit', IC.habitTab, '習慣') + tab('todo', IC.todoTab, 'ToDo') + tab('kcal', IC.kcalTab, 'カロリー') + '</div>';
   }
   const badge = (cls, text) => '<span class="badge ' + cls + '">' + text + '</span>';
   const notice = (cls, text, action) => '<div class="notice ' + cls + '"><span>' + text + '</span>' + (action || '') + '</div>';
@@ -2605,15 +2630,40 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     return now.getHours() * 60 + now.getMinutes() >= E.hmToMin(time);
   }
 
-  // ===================== ホーム =====================
-  function viewHome() {
+  // ===================== 画面（下のタブ：習慣・ToDo・カロリー） =====================
+  /** 習慣：その日の習慣を記録する（日付を戻して過去の日も記録できる） */
+  function viewHabit() {
     const c = ctx();
     const t = c.today;
     const d = viewDate();
     const L = c.day(d);
-    return topbarHome(d, t) + noticesHome(c, d, t, L) + remainBlock(c, d, t, L) + homeSwitch(L) +
-      (App.ui.homeSeg === 'todo' ? todoCard(c, d, t) : habitsCard(c, d, t)) +
-      bankCard(c, d, t, L) + mealsCard(c, d, t, L);
+    return topbarHome(d, t) + noticesHome(c, d, t, L, 'habit') + habitsCard(c, d, t);
+  }
+  /** ToDo：Todoistと同じく、いつも今日を基準にする */
+  function viewTodo() {
+    const c = ctx();
+    const t = c.today;
+    return '<header class="topbar"><div class="tb-nav"></div><span class="tb-title always" aria-hidden="true">ToDo</span>' +
+      '<button class="icon-btn" data-act="settings" aria-label="設定">' + IC.gear + '</button></header><h1 class="sr-only">ToDo</h1>' +
+      noticesHome(c, t, t, c.day(t), 'todo') + todoCard(c, t, t);
+  }
+  /** カロリー：選んだ日（ふだんは今日）の残り・報酬と貯金・食事、その下に履歴のカレンダー */
+  function viewKcal() {
+    const c = ctx();
+    const t = c.today;
+    const d = viewDate();
+    const L = c.day(d);
+    return topbarHome(d, t) + noticesHome(c, d, t, L, 'kcal') + remainBlock(c, d, t, L) + bankCard(c, d, t, L) + mealsCard(c, d, t, L) + historySection(c, d, t);
+  }
+  function historySection(c, d, t) {
+    const ym = App.ui.histMonth && App.ui.histMonth <= E.monthKey(t) ? App.ui.histMonth : E.monthKey(d);
+    const s = c.monthSummary(ym);
+    return '<h2 class="hist-title" id="h-hist">履歴</h2><p class="hint hist-hint">日付をタップすると、その日のカロリーと食事を上に表示します。</p>' +
+      '<section class="card" aria-labelledby="h-hist">' + calendar(c, ym, d, 'hist') + legend() + '</section>' +
+      '<div class="stats"><div class="stat"><span class="lbl">平均達成率</span><span class="val">' + (s.avgRate === null ? '—' : Math.round(s.avgRate * 100) + '<small>%</small>') + '</span></div>' +
+      '<div class="stat"><span class="lbl">ToDo完了</span><span class="val">' + s.todoDone + '<small>件</small></span></div>' +
+      '<div class="stat"><span class="lbl">予算内の日</span><span class="val">' + s.okDays + '<small>/ ' + s.judged + '日</small></span></div>' +
+      '<div class="stat"><span class="lbl">貯金の増減</span><span class="val gold">' + signed(s.net) + '</span></div></div>';
   }
 
   function topbarHome(d, t) {
@@ -2627,7 +2677,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       '<span class="date-rel">' + relLabel(d, t) + '</span><span class="date-full">' + dateLabel(d) + IC.down + '</span></button></h1>';
   }
 
-  function noticesHome(c, d, t, L) {
+  function noticesHome(c, d, t, L, tab) {
     const out = [];
     const led = c.ledger;
     if (App.sample) {
@@ -2638,14 +2688,16 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     if (Store.problem) out.push(notice('bad', esc(Store.problem)));
     const sn = syncNotice();
     if (sn) out.push(sn);
-    if (d === t) {
+    if (tab === 'todo') {
       const tr = taskReminderNotice();
       if (tr) out.push(tr);
+    } else if (tab === 'habit') {
       const rem = App.data.core.settings.reminder;
-      if (rem && rem.enabled && reminderDue(rem.time, t)) {
+      if (d === t && rem && rem.enabled && reminderDue(rem.time, t)) {
         const n = c.unmetTargets(t);
         if (n > 0) out.push(notice('warn', 'リマインダー：まだ25%未満の習慣が' + n + '件あります。'));
       }
+    } else if (d === t) {
       if (led.pendingDays.length) {
         const pd = led.pendingDays[led.pendingDays.length - 1];
         out.push(notice('', '食事が未確認の日が' + led.pendingDays.length + '日あります。確認すると +' + fmt(led.pending) + ' kcal が貯金に入ります。',
@@ -2655,7 +2707,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       out.push(notice('', 'この日は食事データがないため、+' + fmt(L.pend) + ' kcal の精算を保留しています。食事がなかった日なら確認済みにしてください。',
         '<button class="btn-s" data-act="confirmDay" data-date="' + d + '">確認済みにする</button>'));
     }
-    if (led.balance < 0) out.push(notice('bad', '貯金がマイナスです（' + numText(led.balance) + ' kcal）。今後の報酬で解消されるまで、引き出しはできません。'));
+    if (tab === 'kcal' && led.balance < 0) out.push(notice('bad', '貯金がマイナスです（' + numText(led.balance) + ' kcal）。今後の報酬で解消されるまで、引き出しはできません。'));
     return out.length ? '<div class="notices">' + out.join('') + '</div>' : '';
   }
 
@@ -2982,57 +3034,6 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     return '<div class="legend"><div><span>達成率</span><span><i class="sw r0"></i>0%</span><span><i class="sw r1"></i>〜49%</span><span><i class="sw r2"></i>50〜99%</span><span><i class="sw r3"></i>100%</span></div>' +
       '<div><span>収支</span><span><span class="mk ok">●</span>予算内</span><span><span class="mk covered">◆</span>貯金で補填</span><span><span class="mk over">▲</span>不足</span><span><span class="mk provisional">○</span>暫定</span></div></div>';
   }
-  function viewHistory() {
-    const c = ctx();
-    const t = c.today;
-    const ym = App.ui.histMonth && App.ui.histMonth <= E.monthKey(t) ? App.ui.histMonth : E.monthKey(t);
-    const sel = App.ui.histSel && App.ui.histSel <= t ? App.ui.histSel : t;
-    const s = c.monthSummary(ym);
-    return '<header class="topbar"><div class="tb-nav"></div><span class="tb-title" aria-hidden="true">履歴</span><button class="icon-btn" data-act="settings" aria-label="設定">' + IC.gear + '</button></header>' +
-      '<h1 class="page-head"><span class="date-rel">履歴</span><span class="date-full plain">達成と食事の記録</span></h1>' +
-      (App.sample ? '<div class="sample-bar"><div><b>サンプルを表示中</b>操作は試せますが保存されません。</div><button data-act="startOwn">自分の設定で始める</button></div>' : '') +
-      '<section class="card" aria-label="カレンダー">' + calendar(c, ym, sel, 'hist') + legend() + '</section>' +
-      '<div class="stats"><div class="stat"><span class="lbl">平均達成率</span><span class="val">' + (s.avgRate === null ? '—' : Math.round(s.avgRate * 100) + '<small>%</small>') + '</span></div>' +
-      '<div class="stat"><span class="lbl">ToDo完了</span><span class="val">' + s.todoDone + '<small>件</small></span></div>' +
-      '<div class="stat"><span class="lbl">予算内の日</span><span class="val">' + s.okDays + '<small>/ ' + s.judged + '日</small></span></div>' +
-      '<div class="stat"><span class="lbl">貯金の増減</span><span class="val gold">' + signed(s.net) + '</span></div></div>' +
-      dayView(c, sel);
-  }
-  function dayView(c, d) {
-    const t = c.today;
-    const L = c.day(d);
-    const r = c.dayRate(d);
-    const st = E.dayStatus(L);
-    const stBadge = { ok: badge('', '予算内'), covered: badge('warn', '貯金で補填'), over: badge('bad', '不足 ' + fmt(L.remaining)), provisional: badge('warn', '暫定') }[st] || '';
-    let html = '<section class="card" aria-labelledby="h-dv"><div class="sec-head"><h2 id="h-dv">' + dateLabel(d) + '</h2><span>' + stBadge + '</span></div>' +
-      '<div class="dv-sum"><div><span>予算</span><b>' + fmt(L.budget) + '</b></div><div><span>食事</span><b>' + fmt(L.M) + '</b></div><div><span>残り</span><b class="' + (L.remaining < 0 ? 'bad' : '') + '">' + numText(L.remaining) + '</b></div></div>';
-    const lines = E.ledgerLines(L);
-    if (d === t && L.unusedReward + L.unusedW > 0) lines.push({ label: '締めで貯金予定', amount: L.unusedReward + L.unusedW, kind: 'pending' });
-    if (lines.length) {
-      html += '<ul class="dv-moves">' + lines.map((x) => '<li' + (x.kind === 'pending' ? ' class="pend"' : '') + '><span>' + x.label + '</span><b class="' + (x.amount > 0 && x.kind !== 'pending' ? 'in' : '') + '">' + signed(x.amount) + '</b></li>').join('') + '</ul>';
-    }
-    const items = habits().filter((h) => {
-      const k = E.kindOn(h, d);
-      return k === 'target' || k === 'weekly' || c.habitDay(h.id, d).entries.length;
-    });
-    html += '<h3 class="dv-h"><span>習慣</span><span>' + (r.targets ? '達成率 ' + Math.round(r.rate * 100) + '%（' + r.done + '/' + r.targets + '）' : '') + '</span></h3>';
-    html += items.length ? '<ul class="dv-list">' + items.map((h) => {
-      const hd = c.habitDay(h.id, d);
-      const k = E.kindOn(h, d);
-      const lab = E.STATE_LABEL[hd.state] + (hd.state === 'partial' ? ' ' + hd.sum + '%' : '') + (k === 'weekly' ? ' ・ 週の目標' : k === 'target' ? '' : ' ・ 臨時');
-      return '<li><span class="stamps">' + (hd.entries.length ? hd.entries.slice(0, 3).map((e) => stamp(e.level, 26)).join('') : stamp(null, 26)) + '</span><span>' + esc(h.name) +
-        '<span class="meta">' + lab + '</span></span><span class="k gold">' + (hd.kcal ? '+' + fmt(hd.kcal) : '') + '</span></li>';
-    }).join('') + '</ul>' : '<p class="empty">この日の習慣の記録はありません。</p>';
-    html += historyTodo(c, d);
-    const meals = c.mealsOn(d);
-    html += '<h3 class="dv-h"><span>食事</span><span>' + fmt(L.M) + ' kcal</span></h3>';
-    html += meals.length ? '<ul class="dv-list">' + meals.map((m) => '<li><span class="meta">' + (m.time ? hmLabel(m.time) : '—') + '</span><span>' + esc(mealName(m)) +
-      mealTag(m) + '</span><span class="k">' + fmt(m.kcal) + '</span></li>').join('') + '</ul>'
-      : '<p class="empty">' + (L.confirmed ? '食事なし（確認済み）' : '食事の記録はありません。') + '</p>';
-    html += '<div class="btn-row"><button class="btn" data-act="openDate" data-date="' + d + '">この日をホームで開いて編集</button></div></section>';
-    return html;
-  }
-
   // ===================== シート =====================
   function openSheet(type, params) {
     const sh = { type, params: params || {}, id: newId('s'), back: document.activeElement };
@@ -3070,7 +3071,12 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   }
   function refreshSheets() {
     if (dragging) return;
-    for (const sh of App.sheets) if (SHEETS[sh.type].live) fillSheet(sh);
+    for (const sh of App.sheets.slice()) {
+      const def = SHEETS[sh.type];
+      // 別の端末で習慣が削除されたときなど、開いているシートの中身がなくなったら閉じる
+      if (def.gone && def.gone(sh.params)) { closeSheet(sh.id); continue; }
+      if (def.live) fillSheet(sh);
+    }
   }
   function closeSheet(id) {
     const sh = id ? App.sheets.find((s) => s.id === id) : App.sheets[App.sheets.length - 1];
@@ -3159,6 +3165,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     },
     level: {
       live: true,
+      gone: (p) => !habitById(p.habitId),
       title: (p) => ({ t: habitById(p.habitId).name, sub: dateLabel(p.date) + 'の達成度' }),
       body(p) {
         const h = habitById(p.habitId);
@@ -3176,6 +3183,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     },
     entries: {
       live: true,
+      gone: (p) => !habitById(p.habitId),
       title(p) {
         const h = habitById(p.habitId);
         return { t: h.name, sub: dateLabel(p.date) + ' ・ 1日' + E.recordVersion(h, p.date).maxPerDay + '回まで' };
@@ -3201,6 +3209,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       },
     },
     habitForm: {
+      gone: (p) => !!p.id && !habitById(p.id),
       title: (p) => (p.id ? '習慣を編集' : '習慣を追加'),
       body(p) {
         const h = p.id ? habitById(p.id) : null;
@@ -3224,7 +3233,9 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         html += '<p class="hint bad" id="hf-err" role="alert"></p><div class="btn-row"><button class="btn primary" type="submit">' + (h ? '保存する' : '追加する') + '</button></div>';
         if (h) {
           html += '<p class="hint">報酬・頻度・回数の変更は今日から反映されます。過去の達成率や獲得済みの報酬は変わりません。</p>' +
-            '<div class="btn-row"><button class="btn danger" type="button" data-act="archiveHabit" data-id="' + h.id + '">アーカイブする</button></div>';
+            '<div class="btn-row"><button class="btn ghost" type="button" data-act="archiveHabit" data-id="' + h.id + '">アーカイブする</button>' +
+            '<button class="btn danger" type="button" data-act="deleteHabit" data-id="' + h.id + '">削除</button></div>' +
+            '<p class="hint">アーカイブはお休み（あとで戻せます）。削除すると、一覧からもアーカイブからも消えます。どちらも、これまでにもらった報酬と貯金はそのまま残ります。</p>';
         } else {
           html += '<p class="hint">頻度は「毎日」、1日の回数は「1回」で登録されます。</p>';
         }
@@ -3239,7 +3250,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         const t = today();
         const act = habits().filter((h) => !E.archivedAt(h, t));
         const arc = habits().filter((h) => E.archivedAt(h, t));
-        let html = '<p class="hint" style="margin-top:0">左の ⋮⋮ をドラッグして並び替えます（ホームの表示順になります）。名前をタップすると編集できます（ホームで習慣を長押ししても開けます）。</p>';
+        let html = '<p class="hint" style="margin-top:0">左の ⋮⋮ をドラッグして並び替えます（「習慣」タブの表示順になります）。名前をタップすると編集できます（「習慣」タブで習慣を長押ししても開けます）。</p>';
         html += act.length ? '<ul class="mgr-list" id="mgr-list">' + act.map((h) => {
           const v = E.versionAt(h, t) || h.versions[h.versions.length - 1];
           return '<li class="mgr-item" data-id="' + h.id + '"><button class="grip" data-grip="1" aria-label="' + esc(h.name) + 'を並び替え。上下の矢印キーでも移動できます">' + IC.grip + '</button>' +
@@ -3247,8 +3258,9 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         }).join('') + '</ul>' : '<p class="empty">まだ習慣がありません。</p>';
         html += '<div class="btn-row"><button class="btn primary" data-act="habitNew">' + IC.plus + '習慣を追加</button></div>';
         html += '<h3 class="dv-h"><span>アーカイブ</span><span>' + arc.length + '件</span></h3>';
-        html += arc.length ? '<ul class="dv-list">' + arc.map((h) => '<li><span></span><span>' + esc(h.name) + '<span class="meta">過去の記録と貯金は残っています</span></span><button class="btn-s" data-act="restoreHabit" data-id="' + h.id + '">元に戻す</button></li>').join('') + '</ul>' : '';
-        html += '<p class="hint">アーカイブした習慣は一覧から外れますが、過去の記録と貯金はそのまま残り、いつでも元に戻せます。お休みしたいときもアーカイブを使います。</p>';
+        html += arc.length ? '<ul class="dv-list">' + arc.map((h) => '<li><span></span><span>' + esc(h.name) + '<span class="meta">過去の記録と貯金は残っています</span></span>' +
+          '<span class="row-actions"><button class="btn-s" data-act="restoreHabit" data-id="' + h.id + '">元に戻す</button><button class="btn-s danger-text" data-act="deleteHabit" data-id="' + h.id + '">削除</button></span></li>').join('') + '</ul>' : '';
+        html += '<p class="hint">アーカイブした習慣は一覧から外れますが、過去の記録と貯金はそのまま残り、いつでも元に戻せます。お休みしたいときもアーカイブを使います。もう使わない習慣は削除できます（もらった報酬と貯金は残ります）。</p>';
         return html;
       },
     },
@@ -3259,7 +3271,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         const c = ctx();
         const t = today();
         const list = habits().filter((h) => !E.archivedAt(h, t) && ['target', 'weekly'].indexOf(E.kindOn(h, p.date)) < 0);
-        if (!list.length) return '<p class="empty">この日に予定外の習慣はありません。登録中の習慣はすべてホームに表示されています。</p>';
+        if (!list.length) return '<p class="empty">この日に予定外の習慣はありません。登録中の習慣はすべて「習慣」タブに表示されています。</p>';
         return '<p class="hint" style="margin-top:0">予定の曜日ではない習慣も、ここから達成を記録できます。今日の達成率には含めません。</p><ul class="dv-list">' + list.map((h) => {
           const hd = c.habitDay(h.id, p.date);
           const v = E.recordVersion(h, p.date);
@@ -3424,7 +3436,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         html += '<section class="set-group"><h3>1日の区切り</h3><div class="set-card"><div class="set-row"><div><b><label for="sf-close">日次締め時刻</label></b><p class="hint">この時刻までの記録は前日分になります。使わなかった報酬の貯金と、引き出しの返金もこの時刻に行います。初期値は 0:00。</p></div>' +
           '<select class="input" id="sf-close" data-change="closeTime">' + closeOptions(core.settings.closeTime) + '</select></div></div></section>';
         const rem = Object.assign({ enabled: false, time: '21:00' }, core.settings.reminder);
-        html += '<section class="set-group"><h3>リマインダー</h3><div class="set-card"><div class="set-row"><div><b>習慣のリマインダー</b><p class="hint">指定時刻を過ぎても25%未満の「毎日・曜日指定」の習慣があると、ホームでお知らせします。すべて25%以上になったら、その日は表示しません。</p></div>' +
+        html += '<section class="set-group"><h3>リマインダー</h3><div class="set-card"><div class="set-row"><div><b>習慣のリマインダー</b><p class="hint">指定時刻を過ぎても25%未満の「毎日・曜日指定」の習慣があると、「習慣」タブでお知らせします。すべて25%以上になったら、その日は表示しません。</p></div>' +
           '<button class="switch" role="switch" aria-checked="' + rem.enabled + '" data-act="remToggle" aria-label="リマインダー"></button></div>' +
           (rem.enabled ? '<div class="set-row"><div><b><label for="sf-rem">お知らせする時刻</label></b></div><select class="input" id="sf-rem" data-change="remTime">' + timeOptions(rem.time) + '</select></div>' : '') +
           '</div><p class="hint">' + (Native.on
@@ -5005,13 +5017,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   /** 「＋ タスクを追加」（一覧の終わりに置く。Todoistと同じ） */
   const addLine = (attrs) => '<button class="add-line" data-act="taskNew"' + (attrs || '') + '><span class="al-plus">' + IC.plus + '</span>タスクを追加</button>';
 
-  // ----- ホームの切り替えとToDoカード -----
-  function homeSwitch(L) {
-    const seg = App.ui.homeSeg === 'todo' ? 'todo' : 'habit';
-    return '<div class="home-switch" role="tablist" aria-label="習慣とToDoの切り替え">' +
-      '<button role="tab" aria-selected="' + (seg === 'habit') + '" data-act="homeSeg" data-v="habit"><span>習慣</span><b>+' + fmt(L.Rh) + ' kcal</b></button>' +
-      '<button role="tab" aria-selected="' + (seg === 'todo') + '" data-act="homeSeg" data-v="todo"><span>ToDo</span><b>+' + fmt(L.Rt) + ' kcal</b></button></div>';
-  }
+  // ----- ToDoタブのカード -----
   function todoCard(c, d, t) {
     if (d !== t) return todoPastCard(c, d);
     const tab = App.ui.todoTab || 'inbox'; // 最初に開くのは Inbox
@@ -5329,6 +5335,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   // ----- タスクの画面（Todoistと同じ：上にプロジェクト、題名と説明、日付・期限・ラベル・リマインダー・報酬の行、サブタスク） -----
   /** 題名と説明は、入力欄から離れたとき（と閉じるとき）に保存する */
   function saveTitleNote(sh) {
+    if (!sh) return false; // シートを閉じる途中の change（閉じる前に beforeClose で保存済み）
     const t = taskById(sh.params.id);
     const el = document.getElementById(sh.id);
     if (!t || !el) return false;
@@ -5702,7 +5709,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       title: () => 'リマインダー',
       body(p) {
         return '<form data-form="remPick" novalidate><input type="datetime-local" class="input" id="rp-dt" value="' + (p.value || '') + '" aria-label="お知らせする日時">' +
-          '<p class="hint">' + (Native.on ? '指定した日時に、iPhoneの通知でお知らせします。' : 'Web版は、アプリを開いたときにホームでお知らせします。') + notifyDeniedHint() + '</p><p class="hint bad" id="rp-err" role="alert"></p>' +
+          '<p class="hint">' + (Native.on ? '指定した日時に、iPhoneの通知でお知らせします。' : 'Web版は、アプリを開いたときに「ToDo」タブでお知らせします。') + notifyDeniedHint() + '</p><p class="hint bad" id="rp-err" role="alert"></p>' +
           '<div class="btn-row"><button class="btn primary" type="submit">設定する</button>' + (p.had ? '<button type="button" class="btn ghost" data-act="remClear">外す</button>' : '') + '</div></form>';
       },
     },
@@ -5811,7 +5818,6 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   }
 
   const TODO_ACTIONS = {
-    homeSeg(el) { App.ui.homeSeg = el.dataset.v; render(); },
     todoTab(el) { App.ui.todoTab = el.dataset.tab; App.ui.todoId = null; render(); },
     todoBack() { App.ui.todoId = null; render(); },
     todoUpMore() { App.ui.todoUpDays = (App.ui.todoUpDays || 14) + 14; render(); },
@@ -6028,9 +6034,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     projOpen(el) {
       const p = projectById(el.dataset.id);
       closeAllSheets();
-      App.ui.homeSeg = 'todo';
-      App.ui.tab = 'home';
-      App.ui.viewDate = null;
+      App.ui.tab = 'todo';
       App.ui.todoTab = 'projects';
       App.ui.todoId = p && !p.archived ? p.id : null;
       render();
@@ -6121,9 +6125,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     labelEdit(el) { openSheet('labelForm', { id: el.dataset.id }); },
     labelOpen(el) {
       closeAllSheets();
-      App.ui.homeSeg = 'todo';
-      App.ui.tab = 'home';
-      App.ui.viewDate = null;
+      App.ui.tab = 'todo';
       App.ui.todoTab = 'labels';
       App.ui.todoId = 'l:' + el.dataset.id;
       render();
@@ -6218,7 +6220,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         td.projects.push(p);
         App.ui.todoTab = 'projects';
         App.ui.todoId = p.id;
-        App.ui.homeSeg = 'todo';
+        App.ui.tab = 'todo';
       }
       closeSheet(sh.id);
       commit(['todo']);
@@ -6291,7 +6293,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   };
 
 
-  /** ホームのお知らせ：時刻を過ぎたタスクのリマインダー */
+  /** ToDoタブのお知らせ：時刻を過ぎたタスクのリマインダー */
   function taskReminderNotice() {
     const now = nowLocal();
     const day = now.slice(0, 10);
@@ -6302,14 +6304,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     return notice('warn', '⏰ リマインダー：「' + esc(first.title) + '」（' + hmLabel(first.reminder.slice(11)) + '）' + (due.length > 1 ? ' ほか' + (due.length - 1) + '件' : ''),
       '<button class="btn-s" data-act="taskOpen" data-id="' + first.id + '">開く</button>');
   }
-  /** 履歴の日別画面：その日に完了したタスク */
-  function historyTodo(c, d) {
-    const comps = c.completionsOn(d);
-    const sum = comps.reduce((s, x) => s + (x.reward || 0), 0);
-    let h = '<h3 class="dv-h"><span>ToDo</span><span>' + (comps.length ? comps.length + '件 ・ +' + fmt(sum) + ' kcal' : '') + '</span></h3>';
-    return h + (comps.length ? '<ul class="task-list">' + comps.map(compRow).join('') + '</ul>' : '<p class="empty">この日に完了したタスクはありません。</p>');
-  }
-  /** 設定：ToDo */
+  /** 設定：ToDoの初期値 */
   function todoSettingsSection() {
     return '<section class="set-group"><h3>ToDo</h3><form class="set-card" data-form="todoSettings" novalidate>' +
       '<div class="set-row"><div><b><label for="tds-reward">新しいタスクの報酬（初期値）</label></b><p class="hint">タスクごとに変えられます。習慣と同じ1日の報酬上限で数えます。</p></div><div class="unit" data-unit="kcal"><input class="input" id="tds-reward" inputmode="numeric" value="' + todo().settings.defaultReward + '"></div></div>' +
@@ -6366,11 +6361,16 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       closeSheet(sh && sh.id);
       render();
     },
-    histSel(el) { App.ui.histSel = el.dataset.date; render(); },
+    histSel(el) {
+      const d = el.dataset.date;
+      App.ui.viewDate = d >= today() ? null : d;
+      render();
+      window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+    },
     openDate(el) {
       const d = el.dataset.date;
       closeAllSheets();
-      App.ui.tab = 'home';
+      App.ui.tab = 'kcal';
       App.ui.viewDate = d >= today() ? null : d;
       render();
       window.scrollTo(0, 0);
@@ -6463,6 +6463,21 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       });
     },
     restoreHabit(el) { Act.archiveHabit(el.dataset.id, false); toast('元に戻しました'); },
+    deleteHabit(el, sh) {
+      const h = habitById(el.dataset.id);
+      if (!h) return;
+      confirmDialog({
+        title: '「' + h.name + '」を削除しますか？',
+        body: '一覧からもアーカイブからも消えます。これまでの記録でもらった報酬と貯金は、そのまま残ります。',
+        ok: '削除する',
+        danger: true,
+        onOk: () => {
+          if (sh && sh.type === 'habitForm') closeSheet(sh.id);
+          const rem = Act.deleteHabit(h.id);
+          toast('「' + h.name + '」を削除しました', { label: '元に戻す', fn: () => Act.undeleteHabit(rem) });
+        },
+      });
+    },
     adhoc() { openSheet('adhoc', { date: viewDate() }); },
     mealNew() { openSheet('meal', { date: viewDate() }); },
     mealEdit(el) { openSheet('meal', { date: el.dataset.date, id: el.dataset.id }); },
@@ -6501,7 +6516,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       ext.mode = ext.mode === 'health' ? 'none' : 'health';
       commit(['core']);
       if (sh) fillSheet(sh);
-      if (ext.mode === 'health') toast('ホームの食事欄の「取り込む」から使えます');
+      if (ext.mode === 'health') toast('「カロリー」タブの食事欄の「取り込む」から使えます');
     },
     offlineToggle(el, sh) {
       const ext = App.data.core.ext;
@@ -6643,7 +6658,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       App.sample = false;
       App.sync = { state: 'idle' };
       App.ui.viewDate = null;
-      App.ui.tab = 'home';
+      App.ui.tab = 'habit';
       App.rev++;
       claimLogin(true);
       closeAllSheets();
