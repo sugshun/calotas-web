@@ -572,6 +572,7 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; backgroun
 .sheet-head h2 { font-size: 18px; font-weight: 800; margin: 0; line-height: 1.35; }
 .sheet-head .sub { display: block; font-size: 12.5px; color: var(--ink-2); font-weight: 400; }
 .sheet-body { overflow: auto; padding: 2px 20px 24px; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.sheet [hidden] { display: none !important; } /* .wds や .row2 の display より優先して隠す */
 /* キーボード（iPhoneアプリ）：出ている間は、シートの下にキーボードの高さ（--kb）ぶんの余白を足し、入力欄をキーボードの上に出す。
    --kb はキーボードが動き始める知らせで変わる（native.js の Kb）ので、シートはキーボードと一緒に動く。
    余白はシートの背景色なので、キーボードの後ろもシートが続いて見える。高さの上限は「キーボードより上の90%」にそろえる */
@@ -4959,15 +4960,47 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     if (ev !== null) f.every = Math.max(1, Math.min(30, toInt(ev) || 1));
     return f;
   }
-  function repeatFields(f) {
-    const types = [['', 'なし'], ['daily', '毎日'], ['weekdays', '平日（月〜金）'], ['weekly', '毎週'], ['monthly', '毎月'], ['yearly', '毎年']];
-    let h = '<select class="input" id="te-rtype" data-change="teRepeat">' + types.map((x) => '<option value="' + x[0] + '"' + (f.rtype === x[0] ? ' selected' : '') + '>' + x[1] + '</option>').join('') + '</select>';
-    const unit = { daily: '日', weekly: '週', monthly: 'か月' }[f.rtype];
-    if (unit) h += '<div class="row2 every"><input type="number" class="input" id="te-every" min="1" max="30" value="' + f.every + '" aria-label="間隔"><span>' + unit + 'ごと</span></div>';
-    if (f.rtype === 'weekly') {
-      h += '<div class="wds" style="margin-top:8px">' + E.WD_ORDER.map((d) => '<button type="button" data-act="teWd" data-v="' + d + '" aria-pressed="' + (f.rdays.indexOf(d) >= 0) + '" aria-label="' + E.WD_NAMES[d] + '曜日">' + E.WD_NAMES[d] + '</button>').join('') + '</div>';
-    }
-    return field('繰り返し', h, f.rtype ? '予定日を起点に繰り返します。完了するたびに報酬がもらえ、次の予定日へ進みます。' : '', 'te-rtype');
+  const REPEAT_TYPES = [['', 'なし'], ['daily', '毎日'], ['weekdays', '平日（月〜金）'], ['weekly', '毎週'], ['monthly', '毎月'], ['yearly', '毎年']];
+  const REPEAT_UNIT = { daily: '日', weekly: '週', monthly: 'か月' };
+  /** 繰り返しの欄。pre は欄の id の頭（te：タスクの編集、tn：タスクの追加）。
+   *  間隔・曜日・説明はいつも置いておき、繰り返しの種類に合わせて hidden で出し分ける */
+  function repeatFields(f, pre) {
+    pre = pre || 'te';
+    const unit = REPEAT_UNIT[f.rtype];
+    let h = '<select class="input" id="' + pre + '-rtype" data-change="' + pre + 'Repeat">' + REPEAT_TYPES.map((x) => '<option value="' + x[0] + '"' + (f.rtype === x[0] ? ' selected' : '') + '>' + x[1] + '</option>').join('') + '</select>';
+    h += '<div class="row2 every" id="' + pre + '-everyrow"' + (unit ? '' : ' hidden') + '><input type="number" class="input" id="' + pre + '-every" min="1" max="30" value="' + f.every + '" aria-label="間隔"><span id="' + pre + '-unit">' + (unit || '日') + 'ごと</span></div>';
+    h += '<div class="wds" id="' + pre + '-wds" style="margin-top:8px"' + (f.rtype === 'weekly' ? '' : ' hidden') + '>' + E.WD_ORDER.map((d) => '<button type="button" data-act="' + pre + 'Wd" data-v="' + d + '" aria-pressed="' + (f.rdays.indexOf(d) >= 0) + '" aria-label="' + E.WD_NAMES[d] + '曜日">' + E.WD_NAMES[d] + '</button>').join('') + '</div>';
+    h += '<p class="hint" id="' + pre + '-rhint"' + (f.rtype ? '' : ' hidden') + '>予定日を起点に繰り返します。完了するたびに報酬がもらえ、次の予定日へ進みます。</p>';
+    return field('繰り返し', h, '', pre + '-rtype');
+  }
+  /** 繰り返しの設定を作る。予定日 date が起点（毎週で曜日を選んでいなければ予定日の曜日、毎月・毎年は予定日の日付） */
+  function buildRepeat(rtype, every, rdays, date) {
+    const dp = date.split('-').map(Number);
+    const days = rdays && rdays.length ? rdays.slice() : [E.weekday(date)];
+    return {
+      type: rtype,
+      every: rtype === 'daily' || rtype === 'weekly' || rtype === 'monthly' ? Math.max(1, Math.min(30, every || 1)) : 1,
+      days: rtype === 'weekly' ? days.sort((a, b) => a - b) : undefined,
+      dom: rtype === 'monthly' || rtype === 'yearly' ? dp[2] : undefined,
+      month: rtype === 'yearly' ? dp[1] : undefined,
+    };
+  }
+  /** タスク追加の画面：繰り返しの種類に合わせて、間隔・曜日・説明を出し分ける。
+   *  入力中のタスク名やキーボードを消さないよう、画面は作り直さずに表示だけ切り替える */
+  function syncRepeat(form, f) {
+    const unit = REPEAT_UNIT[f.rtype];
+    form.querySelector('#tn-rtype').value = f.rtype;
+    form.querySelector('#tn-everyrow').hidden = !unit;
+    if (unit) form.querySelector('#tn-unit').textContent = unit + 'ごと';
+    form.querySelector('#tn-wds').hidden = f.rtype !== 'weekly';
+    form.querySelector('#tn-rhint').hidden = !f.rtype;
+    form.querySelectorAll('#tn-wds button').forEach((b) => b.setAttribute('aria-pressed', String(f.rdays.indexOf(+b.dataset.v) >= 0)));
+  }
+  /** タスク追加の画面：毎週で曜日をまだ自分で選んでいないうちは、予定日（なければ今日）の曜日に合わせる */
+  function tnAutoDays(form, f) {
+    if (f.rtype !== 'weekly' || !f.rdaysAuto) return;
+    f.rdays = [E.weekday(form.querySelector('#tn-date').value || today())];
+    syncRepeat(form, f);
   }
   function labelChips(sel) {
     const labels = todo().labels.slice().sort(byOrder);
@@ -5102,19 +5135,21 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
             proj: proj ? proj + (p.section ? '|' + p.section : '') : '',
             reward: todo().settings.defaultReward,
             label: tab === 'labels' && App.ui.todoId && App.ui.todoId.indexOf('l:') === 0 ? App.ui.todoId.slice(2) : '',
+            rtype: '', every: 1, rdays: [], rdaysAuto: false,
           };
         }
         const f = p.form;
         const pr = readProjectSelect(f.proj);
         let h = '<form data-form="taskNew" novalidate>';
         h += '<input class="input big-title" id="tn-title" maxlength="120" autocomplete="off" placeholder="例：資料を確認する" aria-label="タスク名" autofocus>';
-        h += field('予定日', '<input type="date" class="input" id="tn-date" value="' + f.date + '"><div class="quick">' +
+        h += field('予定日', '<input type="date" class="input" id="tn-date" data-change="tnDateIn" value="' + f.date + '"><div class="quick">' +
           [['今日', t], ['明日', E.addDays(t, 1)], ['来週', nextMonday(t)], ['なし', '']].map((x) => '<button type="button" data-act="tnDate" data-v="' + x[1] + '">' + x[0] + '</button>').join('') + '</div>', '', 'tn-date');
+        h += repeatFields(f, 'tn');
         h += '<div class="row2 top">' + field('プロジェクト', projectSelect('tn-proj', pr.projectId, pr.sectionId), '', 'tn-proj') +
           field('報酬', '<div class="unit" data-unit="kcal"><input class="input" id="tn-reward" inputmode="numeric" value="' + f.reward + '"></div>', '', 'tn-reward') + '</div>';
         if (f.label) { const l = labelById(f.label); if (l) h += '<p class="hint">ラベル「@' + esc(l.name) + '」を付けて追加します。</p>'; }
         h += '<p class="hint bad" id="tn-err" role="alert"></p><div class="btn-row"><button class="btn primary" type="submit">追加する</button></div>';
-        return h + '<p class="hint">追加したあとも続けて入力できます。繰り返し・ラベル・期限・リマインダー・サブタスクは、追加したタスクを開いて設定します。</p></form>';
+        return h + '<p class="hint">追加したあとも続けて入力できます。ラベル・期限・リマインダー・サブタスクは、追加したタスクを開いて設定します。</p></form>';
       },
     },
     taskEdit: {
@@ -5283,7 +5318,18 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         },
       });
     },
-    tnDate(el, sh) { const inp = document.querySelector('#' + sh.id + ' #tn-date'); inp.value = el.dataset.v; sh.params.form.date = el.dataset.v; },
+    tnDate(el, sh) {
+      const inp = document.querySelector('#' + sh.id + ' #tn-date');
+      inp.value = el.dataset.v;
+      sh.params.form.date = el.dataset.v;
+      tnAutoDays(inp.form, sh.params.form);
+    },
+    tnWd(el, sh) {
+      const f = sh.params.form;
+      toggleIn(f.rdays, +el.dataset.v);
+      f.rdaysAuto = false; // 自分で選んだ曜日は、予定日を変えてもそのまま
+      el.setAttribute('aria-pressed', String(f.rdays.indexOf(+el.dataset.v) >= 0));
+    },
     teLabel(el, sh) {
       toggleIn(sh.params.draft.labels, el.dataset.id);
       el.setAttribute('aria-pressed', String(sh.params.draft.labels.indexOf(el.dataset.id) >= 0));
@@ -5472,11 +5518,21 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       f.proj = form.querySelector('#tn-proj').value;
       f.date = date;
       f.reward = reward;
-      TodoAct.add({ title, projectId: pr.projectId, sectionId: pr.sectionId, reward, due: date ? { date } : null, labels: f.label ? [f.label] : [] });
+      // 繰り返し：予定日がなければ今日から
+      const due = date || (f.rtype ? today() : '');
+      const every = Math.max(1, Math.min(30, toInt(form.querySelector('#tn-every').value) || 1));
+      const repeat = f.rtype ? buildRepeat(f.rtype, every, f.rdays, due) : null;
+      TodoAct.add({ title, projectId: pr.projectId, sectionId: pr.sectionId, reward, due: due ? { date: due } : null, repeat, labels: f.label ? [f.label] : [] });
       err.textContent = '';
       titleEl.value = '';
       titleEl.focus();
-      toast('「' + title + '」を追加しました');
+      // 繰り返しは1件ずつ選ぶ。続けて追加するタスクが、うっかり繰り返しにならないよう「なし」に戻す
+      if (repeat) {
+        Object.assign(f, { rtype: '', every: 1, rdays: [], rdaysAuto: false });
+        form.querySelector('#tn-every').value = 1;
+        syncRepeat(form, f);
+      }
+      toast('「' + title + '」を追加しました' + (repeat ? '（' + E.repeatLabel(repeat) + '）' : ''));
     },
     taskEdit(form, sh) {
       const t = taskById(sh.params.id);
@@ -5493,14 +5549,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       if (f.time && !f.date) { err.textContent = '時刻を入れるときは、予定日も入れてください。'; return; }
       let date = f.date;
       if (f.rtype && !date) date = today();
-      if (f.rtype === 'weekly' && !f.rdays.length && date) f.rdays = [E.weekday(date)];
-      const dp = date ? date.split('-').map(Number) : null;
-      const repeat = !t.parentId && f.rtype ? {
-        type: f.rtype, every: f.rtype === 'daily' || f.rtype === 'weekly' || f.rtype === 'monthly' ? f.every : 1,
-        days: f.rtype === 'weekly' ? f.rdays.slice().sort((a, b) => a - b) : undefined,
-        dom: f.rtype === 'monthly' || f.rtype === 'yearly' ? dp[2] : undefined,
-        month: f.rtype === 'yearly' ? dp[1] : undefined,
-      } : null;
+      const repeat = !t.parentId && f.rtype ? buildRepeat(f.rtype, f.every, f.rdays, date) : null;
       const patch = {
         title, note: String(f.note || '').trim(), labels: f.labels.slice(),
         due: date ? (f.time ? { date, time: f.time } : { date }) : null,
@@ -5586,6 +5635,14 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
 
   const TODO_CHANGES = {
     teRepeat(el, sh) { readDraft(sh); sh.params.draft.rtype = el.value; fillSheet(sh); },
+    tnRepeat(el, sh) {
+      const f = sh.params.form;
+      f.rtype = el.value;
+      if (f.rtype === 'weekly' && !f.rdays.length) f.rdaysAuto = true;
+      syncRepeat(el.form, f);
+      tnAutoDays(el.form, f);
+    },
+    tnDateIn(el, sh) { sh.params.form.date = el.value; tnAutoDays(el.form, sh.params.form); },
   };
   const TODO_INPUTS = {
     tsQuery(el, sh) { sh.params.q = el.value; refreshSearch(sh); },
