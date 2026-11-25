@@ -930,7 +930,19 @@ html.app.kb-open .toast { bottom: calc(12px + var(--kb)); }
 .lmark { width: 22px; display: grid; place-items: center; flex: none; }
 .lmark svg.mi { width: 18px; height: 18px; stroke-width: 1.7; }
 .tproj-title .lmark svg.mi { width: 22px; height: 22px; }
-.plist { list-style: none; margin: 4px 0 0; padding: 0; }
+.plist { list-style: none; margin: 4px 0 0; padding: 0; position: relative; }
+/* マイプロジェクトの並び替え：長押しして上下に動かす（マウスは右のつまみ） */
+.pl-item { display: flex; align-items: center; background: var(--bg); position: relative; touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.pl-item .pl-row { flex: 1; min-width: 0; }
+.pl-item .grip { flex: none; width: 28px; height: 44px; opacity: 0; transition: opacity 0.12s; }
+.pl-item:hover .grip, .pl-item .grip:focus-visible { opacity: 1; }
+.pl-item.pressing { background: var(--fill); transition: background 0.35s ease-in; }
+.pl-item.dragging { position: absolute; left: 0; right: 0; z-index: 3; box-shadow: var(--shadow); border-radius: 8px; }
+.pl-item.dragging .pl-row { border-bottom-color: transparent; }
+.pl-hint { margin: 10px 2px 0; }
+@media (hover: none) {
+  .pl-item .grip { position: absolute; right: 0; top: 0; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+}
 .pl-row { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 12px 2px; text-align: left; font-size: 15px; color: inherit; }
 .pl-row span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .pl-row .hash, .pl-row .lmark { flex: none; }
@@ -3500,11 +3512,12 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     },
   };
 
-  // 並び替え（指でもマウスでも）。習慣の編集と、ToDoの一覧（Inbox・プロジェクト）で使う
+  // 並び替え（指でもマウスでも）。習慣の編集と、ToDoの一覧（Inbox・プロジェクトの中）と、マイプロジェクトで使う
   const sortItems = (list) => Array.from(list.children).filter((x) => x.matches('.mgr-item, .sortable-item'));
   function saveOrder(list) {
     const ids = sortItems(list).map((x) => x.dataset.id);
     if (list.dataset.sort === 'tasks') TodoAct.reorder(ids);
+    else if (list.dataset.sort === 'projects') TodoAct.reorderProjects(ids);
     else Act.reorder(ids);
   }
   function startDrag(ev, li) {
@@ -5099,7 +5112,10 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     const arch = projectsOf(true);
     const cnt = (pid) => topLive().filter((x) => x.projectId === pid).length;
     let h = viewHead('マイプロジェクト', act.length + '件', '<div class="tv-tools"><button class="icon-btn" data-act="projNew" aria-label="プロジェクトを追加">' + IC.plus + '</button></div>');
-    h += act.length ? '<ul class="plist">' + act.map((p) => '<li><button class="pl-row" data-act="projOpen" data-id="' + p.id + '"><span class="hash big" style="color:' + projColor(p) + '">#</span><span>' + esc(p.name) + '</span><b>' + (cnt(p.id) || '') + '</b></button></li>').join('') + '</ul>'
+    // 長押しして上下に動かすと、順番を変えられる（タスクと同じ。マウスは右のつまみ、キーボードは上下の矢印）
+    h += act.length ? '<ul class="plist" data-sort="projects">' + act.map((p) => '<li class="pl-item sortable-item" data-id="' + p.id + '"><button class="pl-row" data-act="projOpen" data-id="' + p.id + '"><span class="hash big" style="color:' + projColor(p) + '">#</span><span>' + esc(p.name) + '</span><b>' + (cnt(p.id) || '') + '</b></button>' +
+        '<button class="grip" data-grip="1" aria-label="「' + esc(p.name) + '」を並び替え。上下の矢印キーでも移動できます">' + IC.grip + '</button></li>').join('') + '</ul>' +
+        (act.length > 1 ? '<p class="hint pl-hint">長押しして上下に動かすと、順番を変えられます。</p>' : '')
       : '<p class="empty">目的ごとにタスクをまとめるプロジェクトを作れます（例：仕事、生活）。右上の＋から追加します。</p>';
     if (arch.length) {
       h += '<details class="more"><summary>アーカイブしたプロジェクト（' + arch.length + '）</summary><ul class="dv-list">' +
@@ -5379,7 +5395,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     if (!q) return '<p class="hint">タスク名・メモ・プロジェクト名・ラベル名で探せます。</p>';
     const has = (s) => String(s || '').toLowerCase().indexOf(q) >= 0;
     const ts = liveTasks().filter((t) => has(t.title) || has(t.note)).sort(E.taskSort).slice(0, 30);
-    const ps = todo().projects.filter((p) => has(p.name));
+    const ps = todo().projects.filter((p) => has(p.name)).sort(byOrder);
     const ls = todo().labels.filter((l) => has(l.name));
     const cs = allComps().filter((c) => has(c.title)).slice(0, 20);
     let h = '';
@@ -5428,7 +5444,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   }
   document.addEventListener('pointerdown', (ev) => {
     if (ev.pointerType === 'mouse' || Gest.row || dragging) return;
-    const row = ev.target.closest('.task-row[data-task-row]');
+    const row = ev.target.closest('.task-row[data-task-row], .pl-item.sortable-item');
     if (!row || ev.target.closest('.tcheck, [data-grip]')) return;
     Object.assign(Gest, { row, x0: ev.clientX, y0: ev.clientY, dx: 0, mode: 'wait', ev });
     if (row.classList.contains('sortable-item')) {
@@ -5438,7 +5454,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         if (!row.isConnected) { gestReset(false); return; } // 描き直されていたら、やめる
         row.classList.remove('pressing');
         Gest.mode = 'drag';
-        Gest.suppress = true; // 指を離したあとのタップでタスクを開かない
+        Gest.suppress = true; // 指を離したあとのタップで、タスクやプロジェクトを開かない
         const clear = () => setTimeout(() => { Gest.suppress = false; }, 400);
         window.addEventListener('pointerup', clear, { once: true });
         window.addEventListener('pointercancel', clear, { once: true });
@@ -5454,6 +5470,8 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     const dy = ev.clientY - Gest.y0;
     if (Gest.mode === 'wait') {
       if (!row.isConnected) { gestReset(false); return; }
+      // プロジェクトの行は、長押しの並び替えだけ（スワイプはない）。指が動いたら、やめてスクロールにする
+      if (!row.classList.contains('task-row')) { if (Math.abs(dx) > 10 || Math.abs(dy) > 10) gestReset(false); return; }
       if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { gestReset(false); return; } // 縦はスクロール
       if (Math.abs(dx) < 12 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
       clearTimeout(Gest.timer);
@@ -5490,7 +5508,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   document.addEventListener('click', (ev) => {
     if (!Gest.suppress) return;
     Gest.suppress = false;
-    if (ev.target.closest && ev.target.closest('.task-row')) { ev.preventDefault(); ev.stopPropagation(); }
+    if (ev.target.closest && ev.target.closest('.task-row, .pl-item')) { ev.preventDefault(); ev.stopPropagation(); }
   }, true);
   // 並び替え中は、ページがスクロールしないようにする（iPhone）
   document.addEventListener('touchmove', (ev) => { if (dragging) ev.preventDefault(); }, { passive: false });
@@ -5561,6 +5579,12 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     },
     reorder(ids) {
       ids.forEach((id, i) => { const t = taskById(id); if (t) t.order = i; });
+      commit(['todo']);
+    },
+    reorderProjects(ids) {
+      ids.forEach((id, i) => { const p = projectById(id); if (p) p.order = i; });
+      // アーカイブ中のプロジェクトは、元に戻したときに末尾に並ぶように後ろへ
+      projectsOf(true).forEach((p, i) => { p.order = ids.length + i; });
       commit(['todo']);
     },
   };
