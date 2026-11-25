@@ -12,90 +12,104 @@
 <meta name="theme-color" content="#ffffff">
 <style>
 :root {
-  /* カロタス：白い紙と朱のはんこ。Todoistのように、余白と細い区切り線で並べるリスト中心の画面。
-     色を使うのは朱（はんこ・主な操作・追加ボタン）と金（報酬kcal）だけ。ほかは墨の濃淡で静かに。 */
+  /* カロタス：Todoistに限りなく寄せた見た目。白い地に細い区切り線、赤は追加・主な操作・選択中だけ。
+     日付の色（今日＝緑、明日＝橙、今週＝紫、期限切れ＝赤）もTodoistと同じ考え方。金は報酬kcalだけに使う。 */
   --bg: #ffffff;
   --surface: #ffffff;
-  --fill: #f5f5f4;
-  --fill-2: #ebebea;
-  --ink: #1f1f1f;
-  --ink-2: #6e6e6e;
-  --ink-3: #a3a3a3;
-  --line: #ededec;
-  --line-2: #dcdcdb;
-  --shu: #d8473a;
-  --shu-press: #c13c30;
-  --shu-text: #c63f33;
-  --shu-soft: #fcebe8;
+  --fill: #f5f5f5;
+  --fill-2: #ebebeb;
+  --ink: #202020;
+  --ink-2: #666666;
+  --ink-3: #757575;
+  --line: #f0f0f0;
+  --line-2: #e5e5e5;
+  --shu: #dc4c3e;
+  --shu-press: #c3392c;
+  --shu-text: #c9392b;
+  --shu-soft: #ffefe5;
   --on-shu: #ffffff;
   --kin: #a86d10;
   --kin-bright: #f0a536;
   --kin-soft: #fdf3e2;
-  --midori: #1f8a4f;
-  --p3: #2c6fdc;
+  --midori: #058527;
+  --p3: #246fe0;
+  --d-today: #058527;
+  --d-tomorrow: #ad6200;
+  --d-week: #692ec2;
+  --d-over: #d1453b;
+  --swipe-done: #058527;
+  --swipe-date: #692ec2;
   --bar-base: #3b3b3b;
-  --heat-1: #fbe2de;
-  --heat-2: #f0a094;
-  --heat-2-text: #1f1f1f;
-  --shadow: 0 10px 32px rgba(0, 0, 0, 0.14);
-  --shadow-fab: 0 6px 18px rgba(216, 71, 58, 0.34), 0 2px 4px rgba(0, 0, 0, 0.1);
-  --backdrop: rgba(0, 0, 0, 0.34);
+  --heat-1: #fde4df;
+  --heat-2: #f19a8f;
+  --heat-2-text: #202020;
+  --shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+  --shadow-fab: 0 4px 14px rgba(220, 76, 62, 0.32), 0 1px 3px rgba(0, 0, 0, 0.12);
+  --backdrop: rgba(0, 0, 0, 0.32);
   --font: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI", "Yu Gothic", "Meiryo", system-ui, sans-serif;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #1b1b1b;
-    --surface: #242424;
-    --fill: #2a2a2a;
-    --fill-2: #333333;
-    --ink: #ececec;
-    --ink-2: #a2a2a2;
-    --ink-3: #6c6c6c;
-    --line: #2e2e2e;
-    --line-2: #3c3c3c;
-    --shu: #d8473a;
-    --shu-press: #c13c30;
-    --shu-text: #f27b6f;
-    --shu-soft: #3a2320;
+    --bg: #1e1e1e;
+    --surface: #282828;
+    --fill: #2f2f2f;
+    --fill-2: #3d3d3d;
+    --ink: #e8e8e8;
+    --ink-2: #a8a8a8;
+    --ink-3: #8c8c8c;
+    --line: #2f2f2f;
+    --line-2: #3d3d3d;
+    --shu: #dc4c3e;
+    --shu-press: #c3392c;
+    --shu-text: #ff7066;
+    --shu-soft: #3d2622;
     --kin: #e9b45c;
     --kin-bright: #e7a43c;
     --kin-soft: #3a2e1a;
-    --midori: #4cc37e;
+    --midori: #25b84c;
     --p3: #6c9ef2;
+    --d-today: #25b84c;
+    --d-tomorrow: #ff9a14;
+    --d-week: #a970ff;
+    --d-over: #ff7066;
     --bar-base: #d0d0d0;
-    --heat-1: #3a2320;
+    --heat-1: #3d2622;
     --heat-2: #7f3a32;
     --heat-2-text: #ffffff;
-    --shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
-    --shadow-fab: 0 6px 18px rgba(0, 0, 0, 0.5);
+    --shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+    --shadow-fab: 0 4px 14px rgba(0, 0, 0, 0.5);
     --backdrop: rgba(0, 0, 0, 0.55);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #1b1b1b;
-  --surface: #242424;
-  --fill: #2a2a2a;
-  --fill-2: #333333;
-  --ink: #ececec;
-  --ink-2: #a2a2a2;
-  --ink-3: #6c6c6c;
-  --line: #2e2e2e;
-  --line-2: #3c3c3c;
-  --shu-text: #f27b6f;
-  --shu-soft: #3a2320;
+  --bg: #1e1e1e;
+  --surface: #282828;
+  --fill: #2f2f2f;
+  --fill-2: #3d3d3d;
+  --ink: #e8e8e8;
+  --ink-2: #a8a8a8;
+  --ink-3: #8c8c8c;
+  --line: #2f2f2f;
+  --line-2: #3d3d3d;
+  --shu-text: #ff7066;
+  --shu-soft: #3d2622;
   --kin: #e9b45c;
   --kin-bright: #e7a43c;
   --kin-soft: #3a2e1a;
-  --midori: #4cc37e;
+  --midori: #25b84c;
   --p3: #6c9ef2;
+  --d-today: #25b84c;
+  --d-tomorrow: #ff9a14;
+  --d-week: #a970ff;
+  --d-over: #ff7066;
   --bar-base: #d0d0d0;
-  --heat-1: #3a2320;
+  --heat-1: #3d2622;
   --heat-2: #7f3a32;
   --heat-2-text: #ffffff;
-  --shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
-  --shadow-fab: 0 6px 18px rgba(0, 0, 0, 0.5);
+  --shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  --shadow-fab: 0 4px 14px rgba(0, 0, 0, 0.5);
   --backdrop: rgba(0, 0, 0, 0.55);
   color-scheme: dark;
 }
@@ -310,7 +324,7 @@ body.scrolled .tb-title { opacity: 1; }
 .pot-max { font-size: 13px; font-weight: 600; color: var(--ink); }
 .pot-max b { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
 .pot-side { display: flex; flex-direction: column; align-items: flex-end; font-size: 11px; color: var(--ink-2); line-height: 1.2; }
-.pot-side b { font-size: 16px; font-weight: 800; color: var(--kin); font-variant-numeric: tabular-nums; }
+.pot-side b { font-size: 16px; font-weight: 700; color: var(--kin); font-variant-numeric: tabular-nums; }
 .pot-note { grid-column: 2 / -1; font-size: 11.5px; color: var(--ink-2); line-height: 1.5; }
 .rate-side b.rate-pot { color: var(--kin); font-weight: 700; font-variant-numeric: tabular-nums; }
 
@@ -330,7 +344,7 @@ body.scrolled .tb-title { opacity: 1; }
 /* ===== セクション（枠のないリスト） ===== */
 .card { margin-top: 30px; }
 .sec-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
-.sec-head h2 { font-size: 16px; font-weight: 800; margin: 0; }
+.sec-head h2 { font-size: 16px; font-weight: 700; margin: 0; }
 .link-btn {
   display: inline-flex; align-items: center; gap: 1px;
   background: none; border: 0; color: var(--ink-2);
@@ -340,9 +354,9 @@ body.scrolled .tb-title { opacity: 1; }
 .link-btn:hover { color: var(--ink); }
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  min-height: 46px; padding: 0 16px;
-  border-radius: 10px; border: 1px solid transparent;
-  font-weight: 700; font-size: 15px;
+  min-height: 44px; padding: 0 16px;
+  border-radius: 8px; border: 1px solid transparent;
+  font-weight: 600; font-size: 15px;
   background: var(--fill); color: var(--ink);
 }
 .btn svg.ic { width: 18px; height: 18px; }
@@ -383,7 +397,7 @@ body.scrolled .tb-title { opacity: 1; }
   border: 0; background: none; padding: 8px 0 10px; margin-bottom: -1px;
   border-bottom: 2px solid transparent; color: var(--ink-3); line-height: 1.3;
 }
-.home-switch button span { font-size: 17px; font-weight: 800; }
+.home-switch button span { font-size: 17px; font-weight: 700; }
 .home-switch button b { font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 700; color: var(--ink-3); }
 .home-switch button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--shu); }
 .home-switch button[aria-selected="true"] b { color: var(--kin); }
@@ -414,7 +428,7 @@ body.scrolled .tb-title { opacity: 1; }
 .stamps svg.stamp + svg.stamp { margin-left: -8px; }
 .stamps .more { font-size: 11px; color: var(--ink-2); margin-left: 3px; }
 .habit-text { display: grid; gap: 1px; min-width: 0; }
-.habit-name { font-weight: 500; font-size: 15.5px; line-height: 1.35; overflow-wrap: anywhere; }
+.habit-name { font-weight: 400; font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
 .habit-meta { font-size: 12.5px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 0 8px; line-height: 1.5; }
 .st-label { font-weight: 600; }
 .st-label.full { color: var(--shu-text); }
@@ -422,10 +436,10 @@ body.scrolled .tb-title { opacity: 1; }
 .st-label.zero, .st-label.none { color: var(--ink-3); font-weight: 400; }
 .wk-done { color: var(--shu-text); font-weight: 700; }
 .habit-kcal { text-align: right; white-space: nowrap; }
-.habit-kcal b { display: block; font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 700; color: var(--kin); line-height: 1.25; }
+.habit-kcal b { display: block; font-variant-numeric: tabular-nums; font-size: 13.5px; font-weight: 600; color: var(--kin); line-height: 1.3; }
 .habit-kcal small { display: block; font-size: 11px; color: var(--ink-3); }
 .habit-kcal b.zero { color: var(--ink-3); font-weight: 500; }
-.sub-head { font-size: 13px; color: var(--ink); font-weight: 800; margin: 18px 0 0; padding-bottom: 6px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: baseline; }
+.sub-head { font-size: 13px; color: var(--ink); font-weight: 700; margin: 18px 0 0; padding-bottom: 6px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: baseline; }
 .sub-head span { font-weight: 400; font-size: 12px; color: var(--ink-2); }
 
 /* 達成度スタンプ（はんこ） */
@@ -449,7 +463,7 @@ svg.stamp.pop { animation: press 0.5s cubic-bezier(0.2, 1.4, 0.4, 1); }
   position: absolute; right: 0; top: -6px; z-index: 2;
   padding: 0 9px; border-radius: 999px;
   background: var(--kin-soft); box-shadow: inset 0 0 0 1px var(--kin-bright);
-  font-variant-numeric: tabular-nums; font-weight: 800; font-size: 15px; line-height: 1.6; color: var(--kin);
+  font-variant-numeric: tabular-nums; font-weight: 700; font-size: 15px; line-height: 1.6; color: var(--kin);
   pointer-events: none;
   animation: fly 1.2s ease-out forwards;
 }
@@ -483,8 +497,8 @@ svg.stamp.pop { animation: press 0.5s cubic-bezier(0.2, 1.4, 0.4, 1); }
   background: none; border: 0; padding: 0 0 8px; text-align: left;
   border-bottom: 1px solid var(--line);
 }
-.meals-head h2 { font-size: 16px; font-weight: 800; margin: 0; }
-.meals-head .tot { font-variant-numeric: tabular-nums; font-size: 17px; font-weight: 800; margin-left: auto; }
+.meals-head h2 { font-size: 16px; font-weight: 700; margin: 0; }
+.meals-head .tot { font-variant-numeric: tabular-nums; font-size: 17px; font-weight: 700; margin-left: auto; }
 .meals-head .tot small { font-size: 12px; color: var(--ink-3); font-weight: 600; margin-left: 3px; }
 .meals-head .cnt { font-size: 12.5px; color: var(--ink-2); }
 .meals-head svg { width: 17px; height: 17px; color: var(--ink-3); transition: transform 0.2s; }
@@ -569,7 +583,7 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; backgroun
 .sheet::before { content: ""; position: absolute; top: 6px; left: 50%; width: 36px; height: 4px; margin-left: -18px; border-radius: 2px; background: var(--line-2); }
 .sheet.full { height: 94%; }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 18px 10px 6px 20px; }
-.sheet-head h2 { font-size: 18px; font-weight: 800; margin: 0; line-height: 1.35; }
+.sheet-head h2 { font-size: 17px; font-weight: 700; margin: 0; line-height: 1.35; }
 .sheet-head .sub { display: block; font-size: 12.5px; color: var(--ink-2); font-weight: 400; }
 .sheet-body { overflow: auto; padding: 2px 20px 24px; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 .sheet [hidden] { display: none !important; } /* .wds や .row2 の display より優先して隠す */
@@ -602,13 +616,13 @@ html.kb-open .sheet.full { height: calc(94% + 0.06 * var(--kb)); }
   font-size: 16px;
   padding: 10px 12px;
   border: 1px solid var(--line-2);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--bg);
   color: var(--ink);
-  min-height: 46px;
+  min-height: 44px;
 }
 .sheet .input { background: var(--surface); }
-.input:focus { outline: none; border-color: var(--shu); box-shadow: 0 0 0 3px var(--shu-soft); }
+.input:focus { outline: none; border-color: var(--ink-3); box-shadow: 0 0 0 1px var(--ink-3); }
 .input.err { border-color: var(--shu); }
 .unit { position: relative; }
 .unit .input { padding-right: 52px; }
@@ -622,7 +636,7 @@ select.input { appearance: none; background-image: linear-gradient(45deg, transp
   background: var(--fill); border-radius: 10px; padding: 3px; gap: 3px;
 }
 .seg button { border: 0; background: none; border-radius: 8px; padding: 8px 4px; font-size: 14px; font-weight: 600; color: var(--ink-2); }
-.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 800; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 700; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14); }
 .wds { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .wds button { aspect-ratio: 1; max-width: 44px; width: 100%; justify-self: center; border-radius: 50%; border: 1px solid var(--line-2); background: var(--surface); font-weight: 700; color: var(--ink-2); }
 .wds button[aria-pressed="true"] { background: var(--shu); color: var(--on-shu); border-color: var(--shu); }
@@ -684,16 +698,16 @@ details.more[open] summary::before { content: "− "; }
 .pb-table th:first-child { text-align: left; }
 .pb-table td { padding: 7px 4px; border-bottom: 1px solid var(--line); text-align: right; font-variant-numeric: tabular-nums; font-size: 14px; white-space: nowrap; }
 .pb-table td:first-child { text-align: left; font-size: 13px; white-space: normal; }
-.pb-table tr.dh td { background: var(--fill); font-weight: 800; font-size: 12.5px; color: var(--ink); border-bottom: 0; padding-top: 7px; }
+.pb-table tr.dh td { background: var(--fill); font-weight: 700; font-size: 12.5px; color: var(--ink); border-bottom: 0; padding-top: 7px; }
 .pb-table .in { color: var(--kin); }
 .pb-table .out { color: var(--ink); }
 .pb-table .pend td { color: var(--ink-3); font-style: italic; }
-.pb-table .bal { font-weight: 800; }
+.pb-table .bal { font-weight: 700; }
 .pb-table .bal.neg { color: var(--shu-text); }
 
 /* ===== 履歴 ===== */
 .cal-head { display: flex; align-items: center; justify-content: space-between; }
-.cal-head h2 { font-size: 17px; font-weight: 800; margin: 0; }
+.cal-head h2 { font-size: 17px; font-weight: 700; margin: 0; }
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px 0; margin-top: 6px; }
 .cal-wd { font-size: 11px; color: var(--ink-3); text-align: center; padding: 2px 0 4px; font-weight: 600; }
 .cal-wd.sat { color: var(--p3); }
@@ -748,7 +762,7 @@ details.more[open] summary::before { content: "− "; }
 .dv-moves li b { font-variant-numeric: tabular-nums; font-size: 14.5px; }
 .dv-moves li b.in { color: var(--kin); }
 .dv-moves li.pend { color: var(--ink-3); }
-.dv-h { font-size: 13px; font-weight: 800; color: var(--ink); margin: 20px 0 2px; padding-bottom: 6px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; }
+.dv-h { font-size: 13px; font-weight: 700; color: var(--ink); margin: 20px 0 2px; padding-bottom: 6px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; }
 .dv-h span + span { font-weight: 400; color: var(--ink-2); }
 .dv-list { list-style: none; margin: 0; padding: 0; }
 .dv-list li { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
@@ -758,10 +772,10 @@ details.more[open] summary::before { content: "− "; }
 
 /* 設定 */
 .set-group { margin-top: 22px; }
-.set-group > h3 { font-size: 13px; color: var(--ink-2); margin: 0 0 6px 2px; font-weight: 700; }
-.set-card { background: var(--fill); border-radius: 12px; padding: 2px 14px; }
-.set-card + .set-card { margin-top: 8px; }
-.set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line-2); }
+.set-group > h3 { font-size: 13px; color: var(--ink-2); margin: 0 0 2px; font-weight: 600; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.set-card { background: none; border-radius: 0; padding: 0; border-bottom: 1px solid var(--line); }
+.set-card + .set-card { margin-top: 0; }
+.set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
 .set-row:first-child { border-top: 0; }
 .set-row > div { min-width: 0; }
 .set-row b { font-weight: 600; display: block; }
@@ -801,7 +815,7 @@ textarea.input { min-height: 120px; font-family: ui-monospace, Menlo, monospace;
 body.has-fab .toast { bottom: calc(146px + env(safe-area-inset-bottom)); }
 body.sheet-open .toast { bottom: calc(20px + env(safe-area-inset-bottom)); }
 html.app.kb-open .toast { bottom: calc(12px + var(--kb)); }
-.toast button { flex: none; background: none; border: 0; color: #ff8a7d; font-weight: 800; padding: 4px; }
+.toast button { flex: none; background: none; border: 0; color: #ff8a7d; font-weight: 700; padding: 4px; }
 /* ログインボーナス：金色の帯で少しだけ目立たせる */
 .toast.bonus { background: #3a2a0c; color: #ffe2a8; font-weight: 700; box-shadow: 0 8px 24px rgba(168, 109, 16, 0.35); }
 .toast.bonus::before { content: ''; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--kin-bright); box-shadow: 0 0 0 4px rgba(240, 165, 54, 0.25); }
@@ -811,68 +825,107 @@ html.app.kb-open .toast { bottom: calc(12px + var(--kb)); }
 @keyframes bonus-pulse { 0% { box-shadow: 0 0 0 0 rgba(240, 165, 54, 0.6); } 100% { box-shadow: 0 0 0 10px rgba(240, 165, 54, 0); } }
 
 /* ===== ToDo ===== */
-.ttabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; margin: 0 -20px; padding: 10px 20px 4px; }
+.ttabs-bar { display: flex; align-items: center; margin: 0 -20px 0; padding-top: 8px; }
+.ttabs { flex: 1; min-width: 0; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; padding: 2px 6px 2px 20px; }
+.ttools { flex: none; display: flex; padding-right: 10px; border-left: 1px solid var(--line); padding-left: 2px; }
+.ttools .icon-btn { color: var(--ink-2); width: 40px; height: 40px; }
+.ttools .icon-btn[aria-current="page"] { color: var(--shu-text); }
 .ttabs::-webkit-scrollbar { display: none; }
-.ttab { flex: none; display: inline-flex; align-items: center; gap: 5px; border: 0; background: none; color: var(--ink-2); border-radius: 8px; padding: 6px 10px; font-size: 14px; font-weight: 600; }
-.ttab span { font-size: 12px; font-weight: 600; color: var(--ink-3); font-variant-numeric: tabular-nums; }
-.ttab[aria-selected="true"] { background: var(--shu-soft); color: var(--shu-text); font-weight: 800; }
-.ttab[aria-selected="true"] span { color: var(--shu-text); }
-.ttools { display: flex; justify-content: flex-end; gap: 2px; margin-top: 2px; }
-.tool-btn { display: inline-flex; align-items: center; gap: 4px; background: none; border: 0; color: var(--ink-2); font-size: 13px; font-weight: 600; padding: 6px 8px; border-radius: 8px; }
-.tool-btn svg.ic { width: 16px; height: 16px; }
-.tool-btn:hover { background: var(--fill); color: var(--ink); }
-.tsec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 14px 0 0; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
-.tsec-head h3 { font-size: 14.5px; font-weight: 800; margin: 0; }
-.tsec-head .link-btn { color: var(--shu-text); }
-.tsec-head.date { align-items: center; padding-bottom: 2px; }
-.tsec-head.date h3 { font-size: 13.5px; }
-.tsec-head.sec { margin-top: 22px; }
-.tsec-sub { font-size: 12px; color: var(--ink-2); font-weight: 500; }
+.ttab { flex: none; display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; color: var(--ink); border-radius: 6px; padding: 7px 10px 7px 8px; font-size: 14px; font-weight: 500; }
+.ttab svg.ic { width: 18px; height: 18px; color: var(--ink-2); stroke-width: 1.6; }
+.ttab span { font-size: 12px; font-weight: 500; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.ttab[aria-selected="true"] { background: var(--shu-soft); color: var(--shu-text); font-weight: 600; }
+.ttab[aria-selected="true"] svg.ic, .ttab[aria-selected="true"] span { color: var(--shu-text); }
+/* 画面の見出し（Todoist：大きな題名＋件数） */
+.tv-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin: 16px 0 2px; }
+.tv-title { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; margin: 0; line-height: 1.25; }
+.tv-sub { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--ink-2); margin: 4px 0 0; }
+.tv-sub svg.ic { width: 15px; height: 15px; }
+.tv-tools { display: flex; gap: 0; margin-right: -8px; }
+.tv-tools .icon-btn { color: var(--ink-2); }
+.tsec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 18px 0 0; padding-bottom: 7px; border-bottom: 1px solid var(--line); }
+.tsec-head h3 { font-size: 14px; font-weight: 700; margin: 0; }
+.tsec-head .link-btn, .link-btn.red { color: var(--shu-text); font-weight: 600; }
+.tsec-head.date { align-items: center; }
+.tsec-head.sec { margin-top: 24px; align-items: center; padding-bottom: 3px; }
+.tsec-head.sec .icon-btn { margin-right: -8px; color: var(--ink-2); }
+.tsec-sub { font-size: 12.5px; color: var(--ink-3); font-weight: 500; }
 .icon-btn.sm { width: 32px; height: 32px; }
 .icon-btn.sm svg.ic { width: 18px; height: 18px; }
 .task-list { list-style: none; margin: 0; padding: 0; position: relative; }
-.task-row { display: grid; grid-template-columns: 32px 1fr auto auto; align-items: start; column-gap: 6px; background: var(--bg); position: relative; }
+.task-row { display: grid; grid-template-columns: 30px 1fr auto auto; align-items: start; column-gap: 4px; background: var(--bg); position: relative; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .sheet .task-row { background: var(--surface); }
-.task-row + .task-row::before { content: ""; position: absolute; top: 0; left: 34px; right: 0; height: 1px; background: var(--line); }
-.task-row.sortable-item.dragging { position: absolute; left: 0; right: 0; z-index: 3; box-shadow: var(--shadow); border-radius: 10px; }
-.task-row.sortable-item.dragging::before { display: none; }
-.tcheck { --pc: var(--ink-3); --pc-soft: transparent; width: 20px; height: 20px; margin: 13px 0 0 3px; border-radius: 50%; border: 1.5px solid var(--pc); background: var(--pc-soft); padding: 0; position: relative; }
-.tcheck::after { content: ""; position: absolute; left: 5px; top: 1.5px; width: 5px; height: 10px; border: solid var(--pc); border-width: 0 2px 2px 0; transform: rotate(45deg); opacity: 0; transition: opacity 0.15s; }
-.tcheck:hover::after { opacity: 0.5; }
+.task-row::after { content: ""; position: absolute; bottom: 0; left: 30px; right: 0; height: 1px; background: var(--line); }
+.task-row.sortable-item.dragging { position: absolute; left: 0; right: 0; z-index: 3; box-shadow: var(--shadow); border-radius: 8px; }
+.task-row.sortable-item.dragging::after { display: none; }
+.tcheck { --pc: var(--ink-3); --pc-soft: transparent; width: 20px; height: 20px; margin: 12px 0 0 2px; border-radius: 50%; border: 1.5px solid var(--pc); background: var(--pc-soft); padding: 0; position: relative; }
+.tcheck::after { content: ""; position: absolute; left: 5px; top: 1.5px; width: 5px; height: 10px; border: solid var(--pc); border-width: 0 1.8px 1.8px 0; transform: rotate(45deg); opacity: 0; transition: opacity 0.15s; }
+.tcheck:hover::after { opacity: 0.6; }
 .tcheck.done { --pc: var(--ink-3); background: var(--ink-3); }
 .is-checking .tcheck { background: var(--pc); }
 .tcheck.done::after, .is-checking .tcheck::after { opacity: 1; border-color: #fff; }
 .is-checking .task-title, .is-checking .te-title, .is-checking .sub-title { text-decoration: line-through; color: var(--ink-3); }
-.task-main { display: grid; gap: 2px; text-align: left; background: none; border: 0; padding: 11px 2px 11px; min-width: 0; }
+.task-main { display: grid; gap: 3px; text-align: left; background: none; border: 0; padding: 10px 2px 11px; min-width: 0; color: inherit; }
 .task-title { font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
-.task-meta { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 12px; color: var(--ink-2); line-height: 1.5; }
-.tm-due.over { color: var(--shu-text); font-weight: 700; }
-.tm-due.today { color: var(--midori); font-weight: 700; }
-.tm-dl.soon { color: var(--shu-text); }
-.tm-proj i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: 1px; }
-.tm-label { font-weight: 600; }
-.task-kcal { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 13.5px; color: var(--kin); padding: 13px 2px 0; white-space: nowrap; }
-.task-row .grip { width: 32px; height: 46px; }
-.subtask-list { grid-column: 1 / -1; list-style: none; margin: 0 0 4px; padding: 0 0 0 32px; }
+.task-desc { font-size: 13px; color: var(--ink-2); line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; font-size: 12.5px; color: var(--ink-2); line-height: 1.5; }
+.task-meta > span { display: inline-flex; align-items: center; gap: 3px; min-width: 0; }
+.task-meta svg.mi { width: 13px; height: 13px; flex: none; stroke-width: 1.8; }
+.tm-due.today { color: var(--d-today); }
+.tm-due.tomorrow { color: var(--d-tomorrow); }
+.tm-due.week { color: var(--d-week); }
+.tm-due.over, .tm-dl.soon { color: var(--d-over); }
+.tm-proj { margin-left: auto; padding-left: 6px; }
+.hash { font-weight: 600; font-size: 13px; line-height: 1; }
+.hash.big { font-size: 19px; width: 22px; text-align: center; flex: none; font-weight: 500; }
+.task-kcal { font-variant-numeric: tabular-nums; font-weight: 600; font-size: 13px; color: var(--kin); padding: 12px 2px 0 6px; white-space: nowrap; }
+.task-row .grip { width: 28px; height: 44px; opacity: 0; transition: opacity 0.12s; }
+.task-row:hover .grip, .task-row .grip:focus-visible { opacity: 1; }
+@media (hover: none) {
+  /* 指で使うときは、Todoistと同じく長押しで並び替える（つまみは、キーボード操作のときだけ使う） */
+  .task-row .grip { position: absolute; right: 0; top: 0; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+}
+/* 指の操作（Todoistと同じ）：右へスワイプで完了（緑）、左へスワイプで日付（紫）、長押しで並び替え */
+.task-row { touch-action: pan-y; }
+.task-row.pressing { background: var(--fill); transition: background 0.35s ease-in; }
+.task-row.swiping { overflow: hidden; }
+.task-row.swiping > *:not(.subtask-list) { transform: translateX(var(--sx, 0px)); }
+.task-row.sw-back > *:not(.subtask-list) { transition: transform 0.2s ease-out; }
+.task-row.sw-done { background: color-mix(in srgb, var(--swipe-done) 16%, var(--bg)); }
+.task-row.sw-date { background: color-mix(in srgb, var(--swipe-date) 16%, var(--bg)); }
+.task-row.sw-done.sw-ready { background: var(--swipe-done); }
+.task-row.sw-date.sw-ready { background: var(--swipe-date); }
+.task-row.sw-done.sw-ready .task-main, .task-row.sw-date.sw-ready .task-main { color: #fff; }
+.task-row.sw-ready .task-meta, .task-row.sw-ready .task-meta > span, .task-row.sw-ready .task-desc, .task-row.sw-ready .task-kcal { color: rgba(255, 255, 255, 0.9) !important; }
+.task-row.sw-ready .tcheck { --pc: #fff; }
+.subtask-list { grid-column: 1 / -1; list-style: none; margin: 0 0 4px; padding: 0 0 0 30px; }
 .task-row.is-sub .task-title { font-size: 14px; }
 .task-row.is-sub .tcheck { width: 17px; height: 17px; margin-top: 12px; }
 .task-row.is-sub .tcheck::after { left: 4px; top: 0.5px; width: 4px; height: 8px; }
-.done-row .task-title { color: var(--ink-2); }
-.add-line { display: flex; align-items: center; gap: 10px; background: none; border: 0; color: var(--ink-2); font-size: 14.5px; padding: 10px 2px; }
-.add-line svg.ic { width: 18px; height: 18px; color: var(--shu-text); stroke-width: 2; }
-.tdone-head { display: flex; align-items: center; gap: 6px; width: 100%; background: none; border: 0; border-top: 1px solid var(--line); padding: 12px 0; margin-top: 8px; font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.done-row .task-title { color: var(--ink-2); text-decoration: line-through; text-decoration-color: var(--ink-3); }
+.add-line { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: 0; color: var(--ink-2); font-size: 14.5px; padding: 11px 2px 11px 4px; text-align: left; }
+.add-line .al-plus { width: 18px; height: 18px; display: grid; place-items: center; border-radius: 50%; color: var(--shu); transition: background 0.12s, color 0.12s; }
+.add-line .al-plus svg.ic { width: 17px; height: 17px; stroke-width: 1.8; }
+.add-line:hover { color: var(--shu-text); }
+.add-line:hover .al-plus { background: var(--shu); color: #fff; }
+.add-line:hover .al-plus svg.ic { width: 13px; height: 13px; stroke-width: 2.4; }
+.tdone-head { display: flex; align-items: center; gap: 6px; width: 100%; background: none; border: 0; border-top: 1px solid var(--line); padding: 12px 0; margin-top: 8px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
 .tdone-head svg.ic { width: 16px; height: 16px; margin-left: auto; transition: transform 0.2s; }
 .tdone-head[aria-expanded="true"] svg.ic { transform: rotate(180deg); }
-.tnav { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
-.tnav .link-btn { display: inline-flex; align-items: center; gap: 2px; }
+.tnav { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.tnav .link-btn { display: inline-flex; align-items: center; gap: 2px; color: var(--ink-2); }
 .tnav svg.ic { width: 16px; height: 16px; }
-.tproj-title { display: flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 800; margin: 6px 0 4px; }
+.tnav .icon-btn { margin-right: -8px; color: var(--ink-2); }
+.tproj-title { display: flex; align-items: center; gap: 8px; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; margin: 4px 0 6px; line-height: 1.25; }
 .pdot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; }
-.lmark { font-weight: 800; width: 14px; text-align: center; flex: none; }
-.plist { list-style: none; margin: 0; padding: 0; }
-.pl-row { display: flex; align-items: center; gap: 12px; width: 100%; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 13px 2px; text-align: left; font-size: 15px; }
+.lmark { width: 22px; display: grid; place-items: center; flex: none; }
+.lmark svg.mi { width: 18px; height: 18px; stroke-width: 1.7; }
+.tproj-title .lmark svg.mi { width: 22px; height: 22px; }
+.plist { list-style: none; margin: 4px 0 0; padding: 0; }
+.pl-row { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 12px 2px; text-align: left; font-size: 15px; color: inherit; }
 .pl-row span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-.pl-row b { font-weight: 600; color: var(--ink-3); font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.pl-row .hash, .pl-row .lmark { flex: none; }
+.pl-row b { font-weight: 400; color: var(--ink-3); font-size: 13px; font-variant-numeric: tabular-nums; }
 .pl-row svg.ic { width: 16px; height: 16px; color: var(--ink-3); }
 .row-actions { display: flex; gap: 6px; }
 .btn-s.danger-text { color: var(--shu-text); }
@@ -882,10 +935,119 @@ html.app.kb-open .toast { bottom: calc(12px + var(--kb)); }
 .row2.every { margin-top: 8px; }
 .row2.every .input { flex: none; width: 90px; }
 .input.big-title { font-size: 18px; font-weight: 600; }
-.te-head { display: grid; grid-template-columns: 30px 1fr; align-items: center; gap: 6px; }
-.te-head .tcheck { margin: 0 0 0 3px; }
-.te-title { font-size: 18px; font-weight: 800; }
-.te-note { margin-top: 8px; min-height: 60px; font-family: var(--font); font-size: 15px; }
+/* ===== タスクの画面（Todoistと同じ並び） ===== */
+.te-top { padding: 12px 8px 2px 14px; }
+.te-crumb { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 72%; background: var(--fill); border: 0; border-radius: 6px; padding: 6px 8px; font-size: 13.5px; color: var(--ink-2); }
+.te-crumb > span:not(.hash) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.te-crumb svg.ic { width: 14px; height: 14px; flex: none; }
+.te-acts { display: flex; align-items: center; margin-left: auto; }
+.te-head { display: grid; grid-template-columns: 30px 1fr; align-items: start; gap: 4px; margin-top: 4px; }
+.te-head .tcheck { margin: 9px 0 0 2px; width: 22px; height: 22px; }
+.te-head .tcheck::after { left: 6px; top: 2px; }
+.te-title, .te-note, .qa-title, .qa-desc, .sub-in { width: 100%; border: 0; background: transparent; color: var(--ink); font-family: var(--font); resize: none; outline: none; padding: 0; }
+.te-title { font-size: 20px; font-weight: 700; line-height: 1.4; padding: 5px 0; overflow: hidden; }
+.te-noterow { display: grid; grid-template-columns: 30px 1fr; align-items: start; gap: 4px; color: var(--ink-3); }
+.te-noterow svg.mi { width: 16px; height: 16px; margin: 4px 0 0 5px; }
+.te-note { font-size: 14.5px; line-height: 1.55; min-height: 24px; overflow: hidden; color: var(--ink); }
+.te-title::placeholder, .te-note::placeholder, .qa-title::placeholder, .qa-desc::placeholder, .sub-in::placeholder { color: var(--ink-3); }
+.te-rows { margin-top: 12px; border-top: 1px solid var(--line); }
+.te-row { display: grid; grid-template-columns: 30px auto 1fr 16px; align-items: center; gap: 4px; width: 100%; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 12px 0; text-align: left; font-size: 15px; color: var(--ink); }
+.te-ri { color: var(--ink-2); display: grid; place-items: center; }
+.te-ri svg.mi { width: 18px; height: 18px; stroke-width: 1.7; }
+.te-rl { font-size: 14px; color: var(--ink-2); }
+.te-rv { text-align: right; min-width: 0; overflow-wrap: anywhere; display: inline-flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 2px 8px; }
+.te-rv i { font-style: normal; color: var(--ink-3); }
+.te-row.empty .te-rv { color: var(--ink-3); }
+.te-row .chev { width: 16px; height: 16px; color: var(--ink-3); }
+.te-ri.today, .te-rv.today { color: var(--d-today); }
+.te-ri.tomorrow, .te-rv.tomorrow { color: var(--d-tomorrow); }
+.te-ri.week, .te-rv.week { color: var(--d-week); }
+.te-ri.over, .te-rv.over { color: var(--d-over); }
+.te-ri.gold, .te-rv.gold { color: var(--kin); }
+.te-row.empty .te-ri { color: var(--ink-2); }
+.te-rep { display: inline-flex; align-items: center; gap: 3px; font-size: 13px; }
+.te-rep svg.mi { width: 13px; height: 13px; }
+.sub-add { display: flex; align-items: center; gap: 10px; padding: 8px 0 8px 4px; border-top: 1px solid var(--line); }
+.sub-add .al-plus { color: var(--shu); display: grid; place-items: center; }
+.sub-add .al-plus svg.ic { width: 17px; height: 17px; }
+.sub-in { flex: 1; font-size: 14.5px; min-height: 30px; }
+.menu-row.danger b, .menu-row.danger > svg.ic:first-child { color: var(--shu-text); }
+
+/* ===== タスクの追加（Todoistのクイック追加） ===== */
+.sheet.bare .sheet-body { padding-top: 18px; padding-bottom: 12px; }
+.sheet.bare::before { display: none; }
+.qa-title { font-size: 17px; font-weight: 600; line-height: 1.4; min-height: 28px; }
+.qa-desc { font-size: 14px; line-height: 1.5; margin-top: 4px; overflow: hidden; color: var(--ink-2); min-height: 22px; }
+.qa-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 12px -20px 0; padding: 0 20px 2px; }
+.qa-chips::-webkit-scrollbar { display: none; }
+.qchip { flex: none; display: inline-flex; align-items: center; border: 1px solid var(--line-2); border-radius: 6px; height: 32px; color: var(--ink-2); background: var(--surface); }
+.qchip > button { display: inline-flex; align-items: center; gap: 5px; height: 100%; background: none; border: 0; padding: 0 9px; font-size: 13px; color: inherit; white-space: nowrap; }
+.qchip > button i { font-style: normal; color: var(--ink-3); }
+.qchip svg.mi { width: 15px; height: 15px; stroke-width: 1.8; }
+.qchip .qx { padding: 0 7px 0 1px; color: var(--ink-3); }
+.qchip .qx svg.ic { width: 13px; height: 13px; }
+.qchip.set.today { color: var(--d-today); }
+.qchip.set.tomorrow { color: var(--d-tomorrow); }
+.qchip.set.week { color: var(--d-week); }
+.qchip.set.over { color: var(--d-over); }
+.qchip.set.gold { color: var(--kin); }
+.qa .hint.bad:empty { display: none; }
+.qa-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 12px -20px 0; padding: 10px 14px 0 12px; border-top: 1px solid var(--line); }
+.qa-proj { display: inline-flex; align-items: center; gap: 6px; min-width: 0; background: none; border: 0; border-radius: 6px; padding: 7px 8px; font-size: 14px; font-weight: 600; color: var(--ink); }
+.qa-proj > span:not(.hash) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qa-proj svg.ic { width: 15px; height: 15px; flex: none; color: var(--ink-2); }
+.qa-proj svg.mi { width: 17px; height: 17px; }
+.qa-proj:active { background: var(--fill); }
+.qa-send { width: 36px; height: 36px; flex: none; border-radius: 50%; border: 0; background: var(--shu); color: #fff; display: grid; place-items: center; }
+.qa-send svg.ic { width: 20px; height: 20px; stroke-width: 2.4; }
+.qa-send:disabled { opacity: 0.35; }
+.qa-send:active:not(:disabled) { background: var(--shu-press); }
+
+/* ===== 日付を選ぶ画面（Todoistと同じ：よく使う日・カレンダー・時間・繰り返し） ===== */
+.dp-now { font-size: 15px; font-weight: 600; margin: 2px 0 6px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.dp-quick { list-style: none; margin: 0; padding: 0; }
+.dp-opt { display: grid; grid-template-columns: 32px 1fr auto; align-items: center; width: 100%; background: none; border: 0; padding: 10px 2px; text-align: left; font-size: 15px; color: var(--ink); }
+.dp-opt svg.ic { width: 20px; height: 20px; stroke-width: 1.7; }
+.dp-opt small { font-size: 13px; color: var(--ink-3); }
+.dp-opt[aria-current="true"] span { font-weight: 700; }
+.c-today { --c: var(--d-today); } .c-tomorrow { --c: var(--d-tomorrow); } .c-weekend { --c: var(--p3); } .c-next { --c: var(--d-week); } .c-none { --c: var(--ink-3); }
+.dp-opt svg.ic { color: var(--c); }
+.dp-cal { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 8px; }
+.dp-cal-head { display: flex; align-items: center; justify-content: space-between; font-size: 14.5px; }
+.dp-cal-head span { display: flex; margin-right: -6px; }
+.dp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-top: 4px; text-align: center; }
+.dp-wd { font-size: 11.5px; color: var(--ink-3); padding: 4px 0; }
+.dp-day { height: 38px; border: 0; background: none; border-radius: 50%; font-size: 14.5px; color: var(--ink); font-variant-numeric: tabular-nums; width: 38px; justify-self: center; padding: 0; }
+.dp-day.past { color: var(--ink-3); }
+.dp-day.today { color: var(--shu-text); font-weight: 700; }
+.dp-day.sel { background: var(--shu); color: #fff; font-weight: 700; }
+.dp-row { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: 0; border-top: 1px solid var(--line); margin-top: 8px; padding: 10px 2px; text-align: left; font-size: 15px; color: var(--ink); }
+.dp-row > b { margin-left: auto; font-weight: 500; color: var(--ink-2); font-size: 14px; }
+.dp-row > svg.ic:last-child { width: 16px; height: 16px; color: var(--ink-3); transition: transform 0.2s; }
+.dp-row[aria-expanded="true"] > svg.ic:last-child { transform: rotate(180deg); }
+.dp-ri { width: 22px; display: grid; place-items: center; color: var(--ink-2); }
+.dp-ri svg.mi { width: 18px; height: 18px; stroke-width: 1.7; }
+.dp-row .dp-time { margin-left: auto; width: auto; min-height: 38px; padding: 6px 10px; }
+.dp-reps { list-style: none; margin: 0; padding: 0 0 0 32px; }
+.dp-rep { display: flex; align-items: center; justify-content: space-between; width: 100%; background: none; border: 0; border-top: 1px solid var(--line); padding: 10px 2px; font-size: 14.5px; text-align: left; color: var(--ink); }
+.dp-rep[aria-current="true"] { color: var(--shu-text); font-weight: 600; }
+.dp-rep svg.ic { width: 16px; height: 16px; }
+.dp-custom { padding-left: 32px; }
+.dp-custom .row2.every .input { width: auto; flex: 1; }
+
+/* ===== プロジェクト・ラベルを選ぶ画面 ===== */
+.pp-list { list-style: none; margin: 4px 0 0; padding: 0; }
+.pp-list .empty { padding: 14px 2px; }
+.pp-row { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 11px 2px; text-align: left; font-size: 15px; color: var(--ink); }
+.pp-row > span:not(.hash):not(.lmark) { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.pp-row.sec { padding-left: 30px; font-size: 14.5px; }
+.pp-row .lmark { color: var(--ink-2); }
+.pp-row > svg.ic:last-child { width: 18px; height: 18px; color: var(--shu-text); opacity: 0; }
+.pp-row[aria-pressed="true"] { font-weight: 600; }
+.pp-row[aria-pressed="true"] > svg.ic:last-child { opacity: 1; }
+.pp-row.create { color: var(--shu-text); }
+#lp-q { margin-bottom: 4px; }
+.sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 .lchips { display: flex; flex-wrap: wrap; gap: 6px; }
 .lchips button { border: 0; background: var(--fill); border-radius: 999px; padding: 6px 12px; font-size: 13.5px; font-weight: 700; color: var(--lc, var(--ink-2)); }
 .lchips button[aria-pressed="true"] { background: var(--lc, var(--shu)); color: #fff; }
@@ -898,7 +1060,7 @@ html.app.kb-open .toast { bottom: calc(12px + var(--kb)); }
 .sub-edit .tcheck::after { left: 4.5px; top: 1px; }
 .sub-title { text-align: left; background: none; border: 0; padding: 10px 2px; font-size: 14.5px; }
 .sub-edit li.done .sub-title { text-decoration: line-through; color: var(--ink-3); }
-.comp-title { font-size: 18px; font-weight: 800; margin: 0 0 8px; }
+.comp-title { font-size: 18px; font-weight: 700; margin: 0 0 8px; }
 .dv-sum b.dsm { font-size: 15px; }
 .dv-sum b.gold { color: var(--kin); }
 .kcal-fly.fixed { position: fixed; z-index: 90; right: auto; }
@@ -1923,6 +2085,9 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     cal: svg('<rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><line x1="16" y1="2.5" x2="16" y2="6.5"/><line x1="8" y1="2.5" x2="8" y2="6.5"/><line x1="3" y1="10" x2="21" y2="10"/>'),
     grip: '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="stroke:none;fill:currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>',
     chev: svg('<polyline points="9 18 15 12 9 6"/>', 'chev'),
+    more: '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="stroke:none;fill:currentColor"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>',
+    section: svg('<rect x="3.5" y="4" width="17" height="6" rx="1.5"/><line x1="4" y1="14.5" x2="20" y2="14.5"/><line x1="4" y1="19" x2="14" y2="19"/>'),
+    pencil: svg('<path d="M4 20h4L19 9l-4-4L4 16z"/><line x1="13.5" y1="6.5" x2="17.5" y2="10.5"/>'),
     task: svg('<circle cx="12" cy="12" r="9"/><polyline points="8 12.5 11 15.5 16.5 9.5"/>'),
     meal: svg('<path d="M3.5 11.5h17a8.5 8.5 0 0 1-17 0z"/><path d="M9 3.5c-.8 1-.8 2 0 3s.8 2 0 3M14 3.5c-.8 1-.8 2 0 3s.8 2 0 3"/>'),
     check: svg('<polyline points="5 12.5 10 17.5 19 7"/>'),
@@ -2404,8 +2569,17 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     document.body.classList.toggle('has-fab', App.ui.tab !== 'history');
     view.innerHTML = App.ui.tab === 'history' ? viewHistory() : viewHome();
     bar.innerHTML = viewTabbar();
+    showSelectedTodoTab();
     refreshSheets();
     Fx.run();
+  }
+  /** ToDoのタブは横に流れるので、選んでいるタブ（右のほうのプロジェクト・ラベルも）が見えるようにする */
+  function showSelectedTodoTab() {
+    const sel = document.querySelector('.ttabs .ttab[aria-selected="true"]');
+    if (!sel) return;
+    const row = sel.parentElement;
+    const left = sel.offsetLeft - row.offsetLeft;
+    if (left + sel.offsetWidth > row.clientWidth - 8) row.scrollLeft = left + sel.offsetWidth - row.clientWidth + 24;
   }
   function viewBoot() {
     return '<div class="boot"><div class="spin" aria-hidden="true"></div><p>' +
@@ -2415,7 +2589,9 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   function viewTabbar() {
     const t = App.ui.tab;
     const tab = (k, ic, label) => '<button class="tab" data-act="tab" data-tab="' + k + '"' + (t === k ? ' aria-current="page"' : '') + '>' + ic + '<span>' + label + '</span></button>';
-    const fab = t === 'home' ? '<button class="fab" data-act="addMenu" aria-label="追加する（タスク・食事・習慣）">' + IC.plus + '</button>' : '';
+    // 右下の＋：ToDoを見ているときは、Todoistと同じくすぐタスクの追加を開く。習慣のときは追加メニュー
+    const todoFab = App.ui.homeSeg === 'todo' && viewDate() === today();
+    const fab = t === 'home' ? '<button class="fab" data-act="' + (todoFab ? 'taskNew' : 'addMenu') + '" aria-label="' + (todoFab ? 'タスクを追加' : '追加する（タスク・食事・習慣）') + '">' + IC.plus + '</button>' : '';
     return '<div class="tabbar-inner">' + fab + tab('home', IC.home, 'ホーム') + tab('history', IC.cal, '履歴') + '</div>';
   }
   const badge = (cls, text) => '<span class="badge ' + cls + '">' + text + '</span>';
@@ -2866,7 +3042,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     layer.className = 'layer';
     layer.id = sh.id;
     layer.style.zIndex = String(50 + App.sheets.length);
-    layer.innerHTML = '<div class="backdrop" data-act="close"></div><div class="sheet' + (def.full ? ' full' : '') + '" role="dialog" aria-modal="true" aria-labelledby="' + sh.id + '-t"></div>';
+    layer.innerHTML = '<div class="backdrop" data-act="close"></div><div class="sheet' + (def.full ? ' full' : '') + (def.bare ? ' bare' : '') + (def.cls ? ' ' + def.cls : '') + '" role="dialog" aria-modal="true" aria-labelledby="' + sh.id + '-t"></div>';
     $('#sheets').appendChild(layer);
     document.body.classList.add('sheet-open');
     fillSheet(sh);
@@ -2883,9 +3059,13 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     const scroll = prevBody ? prevBody.scrollTop : 0;
     const head = def.title(sh.params);
     const title = typeof head === 'string' ? head : esc(head.t) + (head.sub ? '<span class="sub">' + head.sub + '</span>' : '');
-    el.innerHTML = '<div class="sheet-head"><h2 id="' + sh.id + '-t" tabindex="-1">' + title + '</h2><button class="icon-btn" data-act="close" aria-label="閉じる">' + IC.close + '</button></div>' +
-      '<div class="sheet-body">' + def.body(sh.params, sh) + '</div>';
+    // 見出し：ふつうは題名と×。def.head があればその形（タスクの画面など）、def.bare なら見出しなし（タスクの追加）
+    const headHtml = def.head ? def.head(sh.params, sh)
+      : def.bare ? '<h2 id="' + sh.id + '-t" class="sr-only" tabindex="-1">' + title + '</h2>'
+        : '<div class="sheet-head"><h2 id="' + sh.id + '-t" tabindex="-1">' + title + '</h2><button class="icon-btn" data-act="close" aria-label="閉じる">' + IC.close + '</button></div>';
+    el.innerHTML = headHtml + '<div class="sheet-body">' + def.body(sh.params, sh) + '</div>';
     el.querySelector('.sheet-body').scrollTop = scroll;
+    growAll(el);
     if (def.mount) def.mount(el, sh);
   }
   function refreshSheets() {
@@ -2895,6 +3075,8 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   function closeSheet(id) {
     const sh = id ? App.sheets.find((s) => s.id === id) : App.sheets[App.sheets.length - 1];
     if (!sh) return;
+    const def = SHEETS[sh.type];
+    if (def && def.beforeClose) try { def.beforeClose(sh); } catch (e) { /* 閉じるのは止めない */ }
     App.sheets = App.sheets.filter((s) => s !== sh);
     const layer = document.getElementById(sh.id);
     if (layer) layer.remove();
@@ -4705,9 +4887,24 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     return flat().completions.slice().sort((a, b) => (a.date !== b.date ? (a.date < b.date ? 1 : -1) : (b.ts || 0) - (a.ts || 0)));
   }
   function shortWd(s) { const d = E.parseYmd(s); return (d.getMonth() + 1) + '/' + d.getDate() + '（' + E.WD_NAMES[d.getDay()] + '）'; }
+  function mdLabel(s) {
+    const d = E.parseYmd(s);
+    return (d.getFullYear() !== E.parseYmd(today()).getFullYear() ? d.getFullYear() + '年' : '') + (d.getMonth() + 1) + '月' + d.getDate() + '日';
+  }
+  /** Todoistと同じ日付の言い方と色：今日・明日・1週間以内は曜日・その先は月日。過ぎたものは赤 */
+  function dayInfo(date, t) {
+    const n = E.diffDays(t, date);
+    const label = n === 0 ? '今日' : n === 1 ? '明日' : n === -1 ? '昨日' : n > 1 && n < 7 ? E.WD_NAMES[E.weekday(date)] + '曜日' : mdLabel(date);
+    const cls = n < 0 ? 'over' : n === 0 ? 'today' : n === 1 ? 'tomorrow' : n < 7 ? 'week' : 'later';
+    return { label, cls, n };
+  }
+  /** 日付の見出し（Todoistと同じ「11月25日 ‧ 今日 ‧ 水曜日」） */
+  function dayHeadText(d, t) {
+    const n = E.diffDays(t, d);
+    return mdLabel(d) + (n === 0 ? ' ‧ 今日' : n === 1 ? ' ‧ 明日' : '') + ' ‧ ' + E.WD_NAMES[E.weekday(d)] + '曜日';
+  }
   function dueLabel(due, t) {
-    const n = E.diffDays(t, due.date);
-    let s = n === 0 ? '今日' : n === 1 ? '明日' : n === -1 ? '昨日' : shortWd(due.date);
+    let s = dayInfo(due.date, t).label;
     if (due.time) s += ' ' + hmLabel(due.time);
     return s;
   }
@@ -4727,37 +4924,62 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   }
   function todayCount(t) { const l = todayLists(t); return l.overdue.length + l.today.length; }
 
+  // 行に並べる小さなアイコン（Todoistと同じ並び：日付・期限・リマインダー・サブタスク・ラベル、右にプロジェクト）
+  const MI = {
+    cal: svg('<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><line x1="3.5" y1="9.5" x2="20.5" y2="9.5"/><line x1="8" y1="3" x2="8" y2="6.5"/><line x1="16" y1="3" x2="16" y2="6.5"/>', 'mi'),
+    rep: svg('<polyline points="17 2.5 20.5 6 17 9.5"/><path d="M4 11.5v-1A4.5 4.5 0 0 1 8.5 6h12"/><polyline points="7 21.5 3.5 18 7 14.5"/><path d="M20 12.5v1a4.5 4.5 0 0 1-4.5 4.5h-12"/>', 'mi'),
+    alarm: svg('<circle cx="12" cy="13" r="7.5"/><polyline points="12 9.5 12 13 14.5 14.5"/><line x1="4" y1="4.5" x2="6.5" y2="2.5"/><line x1="20" y1="4.5" x2="17.5" y2="2.5"/>', 'mi'),
+    tag: svg('<path d="M3.5 12.6V4.5a1 1 0 0 1 1-1h8.1a1 1 0 0 1 .7.3l7.4 7.4a1 1 0 0 1 0 1.4l-8.1 8.1a1 1 0 0 1-1.4 0l-7.4-7.4a1 1 0 0 1-.3-.7z"/><circle cx="8.3" cy="8.3" r="1.4"/>', 'mi'),
+    target: svg('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.8"/>', 'mi'),
+    sub: svg('<path d="M6 4v10a3 3 0 0 0 3 3h9"/><polyline points="15 14 18 17 15 20"/>', 'mi'),
+    inbox: svg('<path d="M3.5 13.5 6 5.5a1.5 1.5 0 0 1 1.4-1h9.2a1.5 1.5 0 0 1 1.4 1l2.5 8v5a1.5 1.5 0 0 1-1.5 1.5h-13a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M3.5 13.5h5l1 2.5h5l1-2.5h5"/>', 'mi'),
+    hash: svg('<line x1="9.5" y1="4" x2="7.5" y2="20"/><line x1="16.5" y1="4" x2="14.5" y2="20"/><line x1="4.5" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="19.5" y2="15"/>', 'mi'),
+    note: svg('<line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="14" y2="17"/>', 'mi'),
+    kcal: svg('<path d="M12 3c1.5 3.5 6 5.5 6 10.5a6 6 0 0 1-12 0c0-2.3 1-4 2.3-5.2.2 1.7 1 2.9 2.2 3.4C10.3 9 10.6 5.8 12 3z"/>', 'mi'),
+    up: svg('<line x1="12" y1="19" x2="12" y2="5"/><polyline points="6 11 12 5 18 11"/>'),
+    upcoming: svg('<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><line x1="3.5" y1="9.5" x2="20.5" y2="9.5"/><line x1="8" y1="3" x2="8" y2="6.5"/><line x1="16" y1="3" x2="16" y2="6.5"/><circle cx="8.5" cy="13.5" r=".6"/><circle cx="12" cy="13.5" r=".6"/><circle cx="15.5" cy="13.5" r=".6"/><circle cx="8.5" cy="17" r=".6"/><circle cx="12" cy="17" r=".6"/>'),
+  };
+  /** 「今日」のアイコン：カレンダーの中に今日の日にち（Todoistと同じ） */
+  function todayIcon(t) {
+    return '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><line x1="8" y1="3" x2="8" y2="6.5"/><line x1="16" y1="3" x2="16" y2="6.5"/>' +
+      '<text x="12" y="17.6" text-anchor="middle" font-size="9" font-weight="700" style="fill:currentColor;stroke:none">' + E.parseYmd(t).getDate() + '</text></svg>';
+  }
+  const firstLine = (s) => String(s || '').split('\n').map((x) => x.trim()).filter(Boolean)[0] || '';
   function taskRow(task, o) {
     o = o || {};
     const t = today();
     const subs = task.parentId ? [] : subtasksOf(task.id);
     const meta = [];
-    if (o.showDate !== false && task.due) {
-      const n = E.diffDays(t, task.due.date);
-      meta.push('<span class="tm-due' + (n < 0 ? ' over' : n === 0 ? ' today' : '') + '">' + dueLabel(task.due, t) + '</span>');
+    if (task.due && (o.showDate !== false || task.due.time || task.repeat)) {
+      const di = dayInfo(task.due.date, t);
+      const txt = o.showDate !== false ? dueLabel(task.due, t) : task.due.time ? hmLabel(task.due.time) : '';
+      meta.push('<span class="tm-due ' + di.cls + '">' + (txt ? MI.cal + txt : '') + (task.repeat ? MI.rep : '') + '</span>');
     }
-    if (task.repeat) meta.push('<span class="tm-rep">↻ ' + E.repeatLabel(task.repeat) + '</span>');
-    if (task.deadline) meta.push('<span class="tm-dl' + (task.deadline <= E.addDays(t, 1) ? ' soon' : '') + '">期限 ' + shortDate(task.deadline) + '</span>');
-    if (o.showProject) {
-      const p = projectById(task.projectId);
-      meta.push('<span class="tm-proj"><i style="background:' + projColor(p) + '"></i>' + esc(p ? p.name : 'Inbox') + '</span>');
-    }
+    if (task.deadline) meta.push('<span class="tm-dl' + (task.deadline <= E.addDays(t, 1) ? ' soon' : '') + '">' + MI.target + dayInfo(task.deadline, t).label + '</span>');
+    if (task.reminder) meta.push('<span class="tm-rem">' + MI.alarm + remLabel(task.reminder, t) + '</span>');
+    if (subs.length) meta.push('<span class="tm-sub">' + MI.sub + subs.filter((s) => s.done).length + '/' + subs.length + '</span>');
     for (const lid of task.labels || []) {
       const l = labelById(lid);
-      if (l) meta.push('<span class="tm-label" style="color:' + (TCOLORS[l.color] || TCOLORS.hai) + '">@' + esc(l.name) + '</span>');
+      if (l) meta.push('<span class="tm-label" style="color:' + (TCOLORS[l.color] || TCOLORS.hai) + '">' + MI.tag + esc(l.name) + '</span>');
     }
-    if (subs.length) meta.push('<span class="tm-sub">☑ ' + subs.filter((s) => s.done).length + '/' + subs.length + '</span>');
-    if (task.reminder) meta.push('<span class="tm-rem">⏰ ' + remLabel(task.reminder, t) + '</span>');
     if (task.parentId && o.showParent) {
       const par = taskById(task.parentId);
       if (par) meta.push('<span class="tm-parent">↳ ' + esc(par.title) + '</span>');
     }
+    if (o.showProject) {
+      const p = projectById(task.projectId);
+      const sec = p ? sectionById(task.sectionId) : null;
+      meta.push('<span class="tm-proj">' + esc(p ? p.name + (sec ? ' / ' + sec.name : '') : 'Inbox') +
+        (p ? '<span class="hash" style="color:' + projColor(p) + '">#</span>' : MI.inbox) + '</span>');
+    }
+    const desc = firstLine(task.note);
     const kcal = !task.parentId && task.reward > 0 ? '<span class="task-kcal">+' + fmt(task.reward) + '</span>' : '<span></span>';
     const nested = o.nested && subs.some((s) => !s.done)
       ? '<ul class="subtask-list">' + subs.filter((s) => !s.done).map((s) => taskRow(s, { showDate: true })).join('') + '</ul>' : '';
     return '<li class="task-row' + (o.sortable ? ' sortable-item' : '') + (task.parentId ? ' is-sub' : '') + '" data-task-row="' + task.id + '" data-id="' + task.id + '">' +
       '<button class="tcheck" data-act="taskDone" data-id="' + task.id + '" aria-label="「' + esc(task.title) + '」を完了にする"></button>' +
       '<button class="task-main" data-act="taskOpen" data-id="' + task.id + '"><span class="task-title">' + esc(task.title) + '</span>' +
+      (desc ? '<span class="task-desc">' + esc(desc) + '</span>' : '') +
       (meta.length ? '<span class="task-meta">' + meta.join('') + '</span>' : '') + '</button>' + kcal +
       (o.sortable ? '<button class="grip" data-grip="1" aria-label="「' + esc(task.title) + '」を並び替え。上下の矢印キーでも移動できます">' + IC.grip + '</button>' : '') +
       nested + '</li>';
@@ -4766,12 +4988,22 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     const p = projectById(cp.projectId);
     return '<li class="task-row done-row"><span class="tcheck done" aria-hidden="true"></span>' +
       '<button class="task-main" data-act="compOpen" data-id="' + cp.id + '"><span class="task-title">' + esc(cp.title) + '</span><span class="task-meta">' +
-      (cp.recurring ? '<span class="tm-rep">↻ 繰り返し</span>' : '') +
-      (p ? '<span class="tm-proj"><i style="background:' + projColor(p) + '"></i>' + esc(p.name) + '</span>' : '') +
-      (cp.ts ? '<span>' + clockLabel(cp.ts) + '</span>' : '') + '</span></button><span class="task-kcal">+' + fmt(cp.reward) + '</span><span></span></li>';
+      (cp.ts ? '<span class="tm-time">' + clockLabel(cp.ts) + '</span>' : '') +
+      (cp.recurring ? '<span class="tm-due later">' + MI.rep + '繰り返し</span>' : '') +
+      '<span class="tm-proj">' + esc(p ? p.name : 'Inbox') + (p ? '<span class="hash" style="color:' + projColor(p) + '">#</span>' : MI.inbox) + '</span>' +
+      '</span></button><span class="task-kcal">+' + fmt(cp.reward) + '</span><span></span></li>';
   }
   const taskList = (items, o, attrs) => '<ul class="task-list"' + (attrs || '') + '>' + items.map((x) => taskRow(x, o)).join('') + '</ul>';
   const secHead = (title, side) => '<div class="tsec-head"><h3>' + title + '</h3>' + (side || '') + '</div>';
+  /** 画面の見出し（Todoistのように大きな題名と、その下に件数） */
+  const viewHead = (title, sub, side) => '<div class="tv-head"><div class="tv-text"><h2 class="tv-title">' + title + '</h2>' +
+    (sub ? '<p class="tv-sub">' + sub + '</p>' : '') + '</div>' + (side || '') + '</div>';
+  const countSub = (n) => (n ? IC.task + n + '件のタスク' : '');
+  // 検索と完了済みは、どの画面からでも開けるよう、タブの右端に置く
+  const viewTools = () => '<div class="ttools"><button class="icon-btn" data-act="todoSearch" aria-label="検索">' + IC_SEARCH + '</button>' +
+    '<button class="icon-btn" data-act="todoTab" data-tab="done" aria-label="完了済みのタスク"' + (App.ui.todoTab === 'done' ? ' aria-current="page"' : '') + '>' + IC.task + '</button></div>';
+  /** 「＋ タスクを追加」（一覧の終わりに置く。Todoistと同じ） */
+  const addLine = (attrs) => '<button class="add-line" data-act="taskNew"' + (attrs || '') + '><span class="al-plus">' + IC.plus + '</span>タスクを追加</button>';
 
   // ----- ホームの切り替えとToDoカード -----
   function homeSwitch(L) {
@@ -4784,7 +5016,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     if (d !== t) return todoPastCard(c, d);
     const tab = App.ui.todoTab || 'inbox'; // 最初に開くのは Inbox
     const counts = { today: todayCount(t), inbox: topLive().filter((x) => !x.projectId).length };
-    const tabs = [['inbox', 'Inbox'], ['today', '今日'], ['upcoming', '近日予定'], ['projects', 'プロジェクト'], ['labels', 'ラベル']];
+    const tabs = [['inbox', 'Inbox', MI.inbox], ['today', '今日', todayIcon(t)], ['upcoming', '近日予定', MI.upcoming], ['projects', 'プロジェクト', MI.hash], ['labels', 'ラベル', MI.tag]];
     let body;
     if (tab === 'inbox') body = viewInbox();
     else if (tab === 'upcoming') body = viewUpcoming(t);
@@ -4792,12 +5024,10 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     else if (tab === 'labels') body = App.ui.todoId ? viewLabel(App.ui.todoId) : viewLabels();
     else if (tab === 'done') body = viewDone();
     else body = viewToday(c, t);
-    return '<section class="card todo" aria-label="ToDo"><div class="ttabs" role="tablist" aria-label="ToDoの表示">' +
-      tabs.map((x) => '<button role="tab" class="ttab" aria-selected="' + (tab === x[0]) + '" data-act="todoTab" data-tab="' + x[0] + '">' + x[1] +
-        (counts[x[0]] ? '<span>' + counts[x[0]] + '</span>' : '') + '</button>').join('') + '</div>' +
-      '<div class="ttools"><button class="tool-btn" data-act="todoSearch">' + IC_SEARCH + '検索</button><button class="tool-btn" data-act="todoTab" data-tab="done">' + IC.task + '完了履歴</button></div>' +
-      '<div class="tbody">' + body + '</div>' +
-      '<div class="add-rows"><button class="add-row" data-act="taskNew">' + IC.plus + '<span>タスクを追加</span></button></div></section>';
+    return '<section class="card todo" aria-label="ToDo"><div class="ttabs-bar"><div class="ttabs" role="tablist" aria-label="ToDoの表示">' +
+      tabs.map((x) => '<button role="tab" class="ttab" aria-selected="' + (tab === x[0]) + '" data-act="todoTab" data-tab="' + x[0] + '">' + x[2] + x[1] +
+        (counts[x[0]] ? '<span>' + counts[x[0]] + '</span>' : '') + '</button>').join('') + '</div>' + viewTools() + '</div>' +
+      '<div class="tbody">' + body + '</div></section>';
   }
   function todoPastCard(c, d) {
     const comps = c.completionsOn(d);
@@ -4809,12 +5039,14 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   }
   function viewToday(c, t) {
     const l = todayLists(t);
-    let h = '';
+    let h = viewHead('今日', countSub(l.overdue.length + l.today.length));
     if (l.overdue.length) {
-      h += secHead('期限切れ', '<button class="link-btn" data-act="taskReschedule">すべて今日に移動</button>') + taskList(l.overdue, { showProject: true, showParent: true });
+      h += secHead('期限切れ', '<button class="link-btn red" data-act="taskReschedule">日程を変更</button>') + taskList(l.overdue, { showProject: true, showParent: true });
     }
-    h += secHead('今日 ' + shortWd(t), '<span class="tsec-sub">' + l.today.length + '件</span>');
-    h += l.today.length ? taskList(l.today, { showProject: true, showParent: true, showDate: false }) : '<p class="empty">今日のタスクはありません。</p>';
+    h += secHead(dayHeadText(t, t));
+    if (l.today.length) h += taskList(l.today, { showProject: true, showParent: true, showDate: false });
+    h += addLine(' data-date="' + t + '"');
+    if (!l.overdue.length && !l.today.length) h += '<p class="empty">今日のタスクはありません。</p>';
     const comps = c.completionsOn(t);
     if (comps.length) {
       const sum = comps.reduce((s, x) => s + (x.reward || 0), 0);
@@ -4826,8 +5058,9 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   }
   function viewInbox() {
     const list = topLive().filter((x) => !x.projectId).sort(byOrder);
-    return secHead('Inbox', '<span class="tsec-sub">まだ整理していないタスク</span>') +
-      (list.length ? taskList(list, { sortable: true, nested: true }, ' data-sort="tasks"') : '<p class="empty">Inboxは空です。思いついたことは、まずここに入れておけます。</p>');
+    return viewHead('Inbox', countSub(list.length)) +
+      (list.length ? taskList(list, { sortable: true, nested: true }, ' data-sort="tasks"') : '') + addLine('') +
+      (list.length ? '' : '<p class="empty">Inboxは空です。思いついたことは、まずここに入れておけます。</p>');
   }
   function viewUpcoming(t) {
     const span = App.ui.todoUpDays || 14;
@@ -4835,13 +5068,14 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     const dateOf = (x) => (x.due ? x.due.date : x.deadline);
     const dated = live.filter((x) => dateOf(x));
     const overdue = dated.filter((x) => dateOf(x) < t).sort(E.taskSort);
-    let h = '';
-    if (overdue.length) h += secHead('期限切れ') + taskList(overdue, { showProject: true, showParent: true });
+    let h = viewHead('近日予定');
+    if (overdue.length) h += secHead('期限切れ', '<button class="link-btn red" data-act="taskReschedule">日程を変更</button>') + taskList(overdue, { showProject: true, showParent: true });
     for (let i = 0; i < span; i++) {
       const d = E.addDays(t, i);
       const items = dated.filter((x) => dateOf(x) === d).sort(E.taskSort);
-      h += '<div class="tsec-head date"><h3>' + shortWd(d) + (i === 0 ? ' ・ 今日' : i === 1 ? ' ・ 明日' : '') + '</h3><button class="icon-btn sm" data-act="taskNew" data-date="' + d + '" aria-label="' + dateLabel(d) + 'にタスクを追加">' + IC.plus + '</button></div>';
+      h += '<div class="tsec-head date"><h3>' + dayHeadText(d, t) + '</h3></div>';
       if (items.length) h += taskList(items, { showProject: true, showParent: true, showDate: false });
+      h += addLine(' data-date="' + d + '" aria-label="' + dateLabel(d) + 'にタスクを追加"');
     }
     return h + '<div class="btn-row"><button class="btn ghost" data-act="todoUpMore">さらに2週間を表示</button></div>';
   }
@@ -4849,13 +5083,12 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     const act = projectsOf(false);
     const arch = projectsOf(true);
     const cnt = (pid) => topLive().filter((x) => x.projectId === pid).length;
-    let h = secHead('プロジェクト', '<span class="tsec-sub">' + act.length + '件</span>');
-    h += act.length ? '<ul class="plist">' + act.map((p) => '<li><button class="pl-row" data-act="projOpen" data-id="' + p.id + '"><i class="pdot" style="background:' + projColor(p) + '"></i><span>' + esc(p.name) + '</span><b>' + cnt(p.id) + '</b>' + IC.chev + '</button></li>').join('') + '</ul>'
-      : '<p class="empty">目的ごとにタスクをまとめるプロジェクトを作れます（例：仕事、生活）。</p>';
-    h += '<div class="btn-row"><button class="btn ghost" data-act="projNew">' + IC.plus + 'プロジェクトを追加</button></div>';
+    let h = viewHead('マイプロジェクト', act.length + '件', '<div class="tv-tools"><button class="icon-btn" data-act="projNew" aria-label="プロジェクトを追加">' + IC.plus + '</button></div>');
+    h += act.length ? '<ul class="plist">' + act.map((p) => '<li><button class="pl-row" data-act="projOpen" data-id="' + p.id + '"><span class="hash big" style="color:' + projColor(p) + '">#</span><span>' + esc(p.name) + '</span><b>' + (cnt(p.id) || '') + '</b></button></li>').join('') + '</ul>'
+      : '<p class="empty">目的ごとにタスクをまとめるプロジェクトを作れます（例：仕事、生活）。右上の＋から追加します。</p>';
     if (arch.length) {
       h += '<details class="more"><summary>アーカイブしたプロジェクト（' + arch.length + '）</summary><ul class="dv-list">' +
-        arch.map((p) => '<li><i class="pdot" style="background:' + projColor(p) + '"></i><span>' + esc(p.name) + '</span><span class="row-actions"><button class="btn-s" data-act="projRestore" data-id="' + p.id + '">元に戻す</button><button class="btn-s danger-text" data-act="projDelete" data-id="' + p.id + '">削除</button></span></li>').join('') + '</ul></details>';
+        arch.map((p) => '<li><span class="hash" style="color:' + projColor(p) + '">#</span><span>' + esc(p.name) + '</span><span class="row-actions"><button class="btn-s" data-act="projRestore" data-id="' + p.id + '">元に戻す</button><button class="btn-s danger-text" data-act="projDelete" data-id="' + p.id + '">削除</button></span></li>').join('') + '</ul></details>';
     }
     return h;
   }
@@ -4865,39 +5098,42 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     const secs = todo().sections.filter((s) => s.projectId === pid).sort(byOrder);
     const tasks = topLive().filter((x) => x.projectId === pid);
     const group = (sid) => tasks.filter((x) => (x.sectionId || null) === sid).sort(byOrder);
-    let h = '<div class="tnav"><button class="link-btn" data-act="todoBack">' + IC.left + 'プロジェクト一覧</button><button class="link-btn" data-act="projEdit" data-id="' + pid + '">編集</button></div>';
-    h += '<h3 class="tproj-title"><i class="pdot" style="background:' + projColor(p) + '"></i>' + esc(p.name) + '</h3>';
+    let h = '<div class="tnav"><button class="link-btn" data-act="todoBack">' + IC.left + 'マイプロジェクト</button><button class="icon-btn" data-act="projMenu" data-id="' + pid + '" aria-label="プロジェクトのメニュー（セクションを追加・編集）">' + IC.more + '</button></div>';
+    h += '<h2 class="tproj-title">' + esc(p.name) + '</h2>';
     const none = group(null);
     if (none.length) h += taskList(none, { sortable: true, nested: true }, ' data-sort="tasks"');
-    h += '<button class="add-line" data-act="taskNew" data-project="' + pid + '">' + IC.plus + 'タスクを追加</button>';
+    h += addLine(' data-project="' + pid + '"');
     for (const s of secs) {
       const items = group(s.id);
-      h += '<div class="tsec-head sec"><h3>' + esc(s.name) + ' <span class="tsec-sub">' + items.length + '</span></h3><button class="link-btn" data-act="secEdit" data-id="' + s.id + '">編集</button></div>';
+      h += '<div class="tsec-head sec"><h3>' + esc(s.name) + ' <span class="tsec-sub">' + items.length + '</span></h3><button class="icon-btn sm" data-act="secEdit" data-id="' + s.id + '" aria-label="セクション「' + esc(s.name) + '」を編集">' + IC.more + '</button></div>';
       if (items.length) h += taskList(items, { sortable: true, nested: true }, ' data-sort="tasks"');
-      h += '<button class="add-line" data-act="taskNew" data-project="' + pid + '" data-section="' + s.id + '">' + IC.plus + 'タスクを追加</button>';
+      h += addLine(' data-project="' + pid + '" data-section="' + s.id + '"');
     }
-    return h + '<div class="btn-row"><button class="btn ghost" data-act="secNew" data-project="' + pid + '">' + IC.plus + 'セクションを追加</button></div>';
+    return h; // セクションの追加は、右上の「…」から（Todoistと同じ）
   }
   function viewLabels() {
     const labels = todo().labels.slice().sort(byOrder);
     const live = liveTasks();
-    let h = secHead('ラベル', '<button class="link-btn" data-act="labelNew">' + IC.plus + '追加</button>');
-    return h + (labels.length ? '<ul class="plist">' + labels.map((l) => '<li><button class="pl-row" data-act="labelOpen" data-id="' + l.id + '"><span class="lmark" style="color:' + (TCOLORS[l.color] || TCOLORS.hai) + '">@</span><span>' + esc(l.name) + '</span><b>' + live.filter((x) => (x.labels || []).indexOf(l.id) >= 0).length + '</b>' + IC.chev + '</button></li>').join('') + '</ul>'
-      : '<p class="empty">「next」「waiting」など、プロジェクトをまたいだ目印を付けられます。</p>');
+    let h = viewHead('ラベル', labels.length ? labels.length + '件' : '', '<div class="tv-tools"><button class="icon-btn" data-act="labelNew" aria-label="ラベルを追加">' + IC.plus + '</button></div>');
+    return h + (labels.length ? '<ul class="plist">' + labels.map((l) => {
+      const n = live.filter((x) => (x.labels || []).indexOf(l.id) >= 0).length;
+      return '<li><button class="pl-row" data-act="labelOpen" data-id="' + l.id + '"><span class="lmark" style="color:' + (TCOLORS[l.color] || TCOLORS.hai) + '">' + MI.tag + '</span><span>' + esc(l.name) + '</span><b>' + (n || '') + '</b></button></li>';
+    }).join('') + '</ul>'
+      : '<p class="empty">「next」「waiting」など、プロジェクトをまたいだ目印を付けられます。右上の＋から追加します。</p>');
   }
   function viewLabel(key) {
     const id = key.indexOf('l:') === 0 ? key.slice(2) : '';
     const l = id ? labelById(id) : null;
     if (!l) { App.ui.todoId = null; return viewLabels(); }
     const items = liveTasks().filter((x) => (x.labels || []).indexOf(id) >= 0).sort(E.taskSort);
-    let h = '<div class="tnav"><button class="link-btn" data-act="todoBack">' + IC.left + 'ラベル一覧</button><button class="link-btn" data-act="labelEdit" data-id="' + id + '">編集</button></div>';
-    h += '<h3 class="tproj-title"><span class="lmark" style="color:' + (TCOLORS[l.color] || TCOLORS.hai) + '">@</span>' + esc(l.name) + '</h3>';
-    return h + (items.length ? taskList(items, { showProject: true, showParent: true }) : '<p class="empty">このラベルが付いたタスクはありません。</p>');
+    let h = '<div class="tnav"><button class="link-btn" data-act="todoBack">' + IC.left + 'ラベル</button><button class="icon-btn" data-act="labelEdit" data-id="' + id + '" aria-label="ラベル「' + esc(l.name) + '」を編集">' + IC.more + '</button></div>';
+    h += '<h2 class="tproj-title"><span class="lmark" style="color:' + (TCOLORS[l.color] || TCOLORS.hai) + '">' + MI.tag + '</span>' + esc(l.name) + '</h2>';
+    return h + (items.length ? taskList(items, { showProject: true, showParent: true }) : '<p class="empty">このラベルが付いたタスクはありません。</p>') + addLine('');
   }
   function viewDone() {
     const all = allComps();
     const limit = App.ui.todoDoneLimit || 50;
-    let h = '<div class="tnav"><button class="link-btn" data-act="todoTab" data-tab="inbox">' + IC.left + 'Inbox</button></div>' + secHead('完了履歴', '<span class="tsec-sub">' + all.length + '件</span>');
+    let h = '<div class="tnav"><button class="link-btn" data-act="todoTab" data-tab="inbox">' + IC.left + 'Inbox</button></div>' + viewHead('完了済み', all.length ? all.length + '件' : '');
     if (!all.length) return h + '<p class="empty">完了したタスクはまだありません。</p>';
     let cur = '';
     let open = false;
@@ -4906,7 +5142,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         if (open) h += '</ul>';
         cur = cp.date;
         const sum = all.filter((x) => x.date === cur).reduce((s, x) => s + (x.reward || 0), 0);
-        h += '<div class="tsec-head date"><h3>' + dateLabel(cur) + '</h3><span class="tsec-sub">+' + fmt(sum) + ' kcal</span></div><ul class="task-list">';
+        h += '<div class="tsec-head date"><h3>' + dayHeadText(cur, today()) + '</h3><span class="tsec-sub">+' + fmt(sum) + ' kcal</span></div><ul class="task-list">';
         open = true;
       }
       h += compRow(cp);
@@ -4917,16 +5153,6 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   }
 
   // ----- 入力部品 -----
-  function projectSelect(id, pid, sid) {
-    let o = '<option value=""' + (!pid ? ' selected' : '') + '>Inbox</option>';
-    for (const p of projectsOf(false)) {
-      o += '<option value="' + p.id + '"' + (pid === p.id && !sid ? ' selected' : '') + '>' + esc(p.name) + '</option>';
-      for (const s of todo().sections.filter((x) => x.projectId === p.id).sort(byOrder)) {
-        o += '<option value="' + p.id + '|' + s.id + '"' + (pid === p.id && sid === s.id ? ' selected' : '') + '>　└ ' + esc(s.name) + '</option>';
-      }
-    }
-    return '<select class="input" id="' + id + '">' + o + '</select>';
-  }
   function readProjectSelect(v) {
     const p = String(v || '').split('|');
     return { projectId: p[0] || null, sectionId: p[1] || null };
@@ -4939,40 +5165,6 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     el.parentElement.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === el)));
   }
   function nextMonday(t) { let d = E.addDays(t, 1); while (E.weekday(d) !== 1) d = E.addDays(d, 1); return d; }
-  function draftOf(t) {
-    const rp = t.repeat || {};
-    return {
-      title: t.title, note: t.note || '', proj: (t.projectId || '') + (t.sectionId ? '|' + t.sectionId : ''),
-      date: t.due ? t.due.date : '', time: t.due && t.due.time ? t.due.time : '', deadline: t.deadline || '',
-      rtype: t.repeat ? rp.type : '', every: rp.every || 1, rdays: (rp.days || []).slice(),
-      labels: (t.labels || []).slice(), reminder: t.reminder || '', reward: t.reward || 0,
-    };
-  }
-  function readDraft(sh) {
-    const el = document.getElementById(sh.id);
-    const f = sh.params.draft;
-    if (!el || !f) return f;
-    const v = (sel) => { const x = el.querySelector(sel); return x ? x.value : null; };
-    const set = (k, sel) => { const x = v(sel); if (x !== null) f[k] = x; };
-    set('title', '#te-title'); set('note', '#te-note'); set('proj', '#te-proj'); set('date', '#te-date'); set('time', '#te-time');
-    set('deadline', '#te-deadline'); set('reminder', '#te-rem'); set('reward', '#te-reward');
-    const ev = v('#te-every');
-    if (ev !== null) f.every = Math.max(1, Math.min(30, toInt(ev) || 1));
-    return f;
-  }
-  const REPEAT_TYPES = [['', 'なし'], ['daily', '毎日'], ['weekdays', '平日（月〜金）'], ['weekly', '毎週'], ['monthly', '毎月'], ['yearly', '毎年']];
-  const REPEAT_UNIT = { daily: '日', weekly: '週', monthly: 'か月' };
-  /** 繰り返しの欄。pre は欄の id の頭（te：タスクの編集、tn：タスクの追加）。
-   *  間隔・曜日・説明はいつも置いておき、繰り返しの種類に合わせて hidden で出し分ける */
-  function repeatFields(f, pre) {
-    pre = pre || 'te';
-    const unit = REPEAT_UNIT[f.rtype];
-    let h = '<select class="input" id="' + pre + '-rtype" data-change="' + pre + 'Repeat">' + REPEAT_TYPES.map((x) => '<option value="' + x[0] + '"' + (f.rtype === x[0] ? ' selected' : '') + '>' + x[1] + '</option>').join('') + '</select>';
-    h += '<div class="row2 every" id="' + pre + '-everyrow"' + (unit ? '' : ' hidden') + '><input type="number" class="input" id="' + pre + '-every" min="1" max="30" value="' + f.every + '" aria-label="間隔"><span id="' + pre + '-unit">' + (unit || '日') + 'ごと</span></div>';
-    h += '<div class="wds" id="' + pre + '-wds" style="margin-top:8px"' + (f.rtype === 'weekly' ? '' : ' hidden') + '>' + E.WD_ORDER.map((d) => '<button type="button" data-act="' + pre + 'Wd" data-v="' + d + '" aria-pressed="' + (f.rdays.indexOf(d) >= 0) + '" aria-label="' + E.WD_NAMES[d] + '曜日">' + E.WD_NAMES[d] + '</button>').join('') + '</div>';
-    h += '<p class="hint" id="' + pre + '-rhint"' + (f.rtype ? '' : ' hidden') + '>予定日を起点に繰り返します。完了するたびに報酬がもらえ、次の予定日へ進みます。</p>';
-    return field('繰り返し', h, '', pre + '-rtype');
-  }
   /** 繰り返しの設定を作る。予定日 date が起点（毎週で曜日を選んでいなければ予定日の曜日、毎月・毎年は予定日の日付） */
   function buildRepeat(rtype, every, rdays, date) {
     const dp = date.split('-').map(Number);
@@ -4985,36 +5177,185 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       month: rtype === 'yearly' ? dp[1] : undefined,
     };
   }
-  /** タスク追加の画面：繰り返しの種類に合わせて、間隔・曜日・説明を出し分ける。
-   *  入力中のタスク名やキーボードを消さないよう、画面は作り直さずに表示だけ切り替える */
-  function syncRepeat(form, f) {
-    const unit = REPEAT_UNIT[f.rtype];
-    form.querySelector('#tn-rtype').value = f.rtype;
-    form.querySelector('#tn-everyrow').hidden = !unit;
-    if (unit) form.querySelector('#tn-unit').textContent = unit + 'ごと';
-    form.querySelector('#tn-wds').hidden = f.rtype !== 'weekly';
-    form.querySelector('#tn-rhint').hidden = !f.rtype;
-    form.querySelectorAll('#tn-wds button').forEach((b) => b.setAttribute('aria-pressed', String(f.rdays.indexOf(+b.dataset.v) >= 0)));
+  /** 繰り返しの選択肢（Todoistと同じ並び。曜日や日付は、選んでいる予定日に合わせる） */
+  function repeatPresets(base) {
+    const dp = base.split('-').map(Number);
+    const wd = E.weekday(base);
+    return [
+      ['daily', '毎日'],
+      ['weekly', '毎週 ' + E.WD_NAMES[wd] + '曜日'],
+      ['weekdays', '平日（月〜金）'],
+      ['monthly', '毎月 ' + dp[2] + '日'],
+      ['yearly', '毎年 ' + dp[1] + '月' + dp[2] + '日'],
+    ];
   }
-  /** タスク追加の画面：毎週で曜日をまだ自分で選んでいないうちは、予定日（なければ今日）の曜日に合わせる */
-  function tnAutoDays(form, f) {
-    if (f.rtype !== 'weekly' || !f.rdaysAuto) return;
-    f.rdays = [E.weekday(form.querySelector('#tn-date').value || today())];
-    syncRepeat(form, f);
+  /** 今週末（土曜）。土日なら来週末 */
+  function weekendOf(t) { const w = E.weekday(t); return E.addDays(t, w === 6 ? 7 : w === 0 ? 6 : 6 - w); }
+  const lcolor = (l) => TCOLORS[l.color] || TCOLORS.hai;
+  // 日付の選び方の小さなアイコン（Todoistと同じ：明日＝太陽、週末＝ソファ、来週＝矢印、日付なし＝斜線）
+  const DI = {
+    sun: svg('<circle cx="12" cy="12" r="4"/><line x1="12" y1="2.5" x2="12" y2="4.5"/><line x1="12" y1="19.5" x2="12" y2="21.5"/><line x1="2.5" y1="12" x2="4.5" y2="12"/><line x1="19.5" y1="12" x2="21.5" y2="12"/><line x1="5.3" y1="5.3" x2="6.7" y2="6.7"/><line x1="17.3" y1="17.3" x2="18.7" y2="18.7"/><line x1="5.3" y1="18.7" x2="6.7" y2="17.3"/><line x1="17.3" y1="6.7" x2="18.7" y2="5.3"/>'),
+    sofa: svg('<path d="M5 11V8.5A2.5 2.5 0 0 1 7.5 6h9A2.5 2.5 0 0 1 19 8.5V11"/><path d="M3.5 12.5a1.5 1.5 0 0 1 3 0V14h11v-1.5a1.5 1.5 0 0 1 3 0V17a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1z"/><line x1="6" y1="18" x2="6" y2="20"/><line x1="18" y1="18" x2="18" y2="20"/>'),
+    next: svg('<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><line x1="8" y1="3" x2="8" y2="6.5"/><line x1="16" y1="3" x2="16" y2="6.5"/><line x1="8" y1="14" x2="15.5" y2="14"/><polyline points="13 11.5 15.5 14 13 16.5"/>'),
+    none: svg('<circle cx="12" cy="12" r="8.5"/><line x1="6" y1="18" x2="18" y2="6"/>'),
+    copy: svg('<rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5"/>'),
+    trash: svg('<polyline points="4 7 20 7"/><path d="M9 7V4.5h6V7"/><path d="M6 7l1 13h10l1-13"/><line x1="10" y1="11" x2="10" y2="16.5"/><line x1="14" y1="11" x2="14" y2="16.5"/>'),
+  };
+  /** 選んでいる日付・時間・繰り返しを、ひと言で（「明日 17:30 ・ 毎日」） */
+  function pickSummary(p) {
+    if (!p.date) return p.kind === 'deadline' ? '期限なし' : '日付なし';
+    const t = today();
+    let s = dayHeadText(p.date, t);
+    if (p.time) s += ' ' + hmLabel(p.time);
+    if (p.rtype) s += ' ・ ' + E.repeatLabel(buildRepeat(p.rtype, p.every, p.rdays, p.date));
+    return s;
   }
-  function labelChips(sel) {
-    const labels = todo().labels.slice().sort(byOrder);
-    return '<div class="lchips" role="group" aria-label="ラベル">' + (labels.length ? labels.map((l) =>
-      '<button type="button" data-act="teLabel" data-id="' + l.id + '" aria-pressed="' + (sel.indexOf(l.id) >= 0) + '" style="--lc:' + (TCOLORS[l.color] || TCOLORS.hai) + '">@' + esc(l.name) + '</button>').join('') : '<span class="hint" style="margin:0">ラベルはまだありません。</span>') + '</div>';
+  function pickCalendar(p, t) {
+    const view = p.view || (p.date || t).slice(0, 7);
+    const ym = view.split('-').map(Number);
+    const lead = (E.weekday(view + '-01') + 6) % 7; // 月曜はじまり（Todoistと同じ）
+    const days = new Date(ym[0], ym[1], 0).getDate();
+    let h = '<div class="dp-cal"><div class="dp-cal-head"><b>' + ym[0] + '年' + ym[1] + '月</b><span><button type="button" class="icon-btn sm" data-act="dpMonth" data-d="-1" aria-label="前の月">' + IC.left + '</button>' +
+      '<button type="button" class="icon-btn sm" data-act="dpMonth" data-d="1" aria-label="次の月">' + IC.right + '</button></span></div><div class="dp-grid">' +
+      E.WD_ORDER.map((d) => '<span class="dp-wd">' + E.WD_NAMES[d] + '</span>').join('');
+    for (let i = 0; i < lead; i++) h += '<span></span>';
+    for (let d = 1; d <= days; d++) {
+      const ds = view + '-' + String(d).padStart(2, '0');
+      h += '<button type="button" class="dp-day' + (ds === t ? ' today' : '') + (ds === p.date ? ' sel' : '') + (ds < t ? ' past' : '') + '" data-act="dpSet" data-v="' + ds + '" aria-label="' + dateLabel(ds) + '"' + (ds === p.date ? ' aria-pressed="true"' : '') + '>' + d + '</button>';
+    }
+    return h + '</div></div>';
+  }
+  /** 日付を選んだ結果を、開いたところ（タスクの追加・タスクの画面・期限切れの日程変更）に反映する */
+  function overdueTasks(t) {
+    const key = (x) => (x.due ? x.due.date : x.deadline);
+    return liveTasks().filter((x) => key(x) && key(x) < t);
+  }
+  function refreshTaskSheets() { App.sheets.filter((x) => x.type === 'taskEdit').forEach(fillSheet); }
+  function pickApply(sh, close) {
+    const p = sh.params;
+    const g = p.target || {};
+    const t0 = today();
+    if (g.kind === 'quick') {
+      const q = App.sheets.find((x) => x.id === g.sheet);
+      if (q) { Object.assign(q.params.form, { date: p.date, time: p.time, rtype: p.rtype, every: p.every, rdays: p.rdays.slice() }); qaSync(q); }
+    } else if (g.kind === 'task') {
+      const t = taskById(g.id);
+      if (t) {
+        const date = p.date || (p.rtype || p.time ? t0 : '');
+        t.due = date ? (p.time ? { date, time: p.time } : { date }) : null;
+        if (!t.parentId) t.repeat = p.rtype && date ? buildRepeat(p.rtype, p.every, p.rdays, date) : null;
+        commit(['todo']);
+        refreshTaskSheets();
+      }
+    } else if (g.kind === 'deadline') {
+      const t = taskById(g.id);
+      if (t) { t.deadline = p.date || null; commit(['todo']); refreshTaskSheets(); }
+    } else if (g.kind === 'overdue' && p.date) {
+      const list = overdueTasks(t0);
+      list.forEach((x) => { if (x.due) x.due.date = p.date; else x.deadline = p.date; });
+      commit(['todo']);
+      toast(list.length + '件を' + dayInfo(p.date, t0).label + 'に移動しました');
+    }
+    if (close) closeSheet(sh.id); else fillSheet(sh);
+  }
+  /** ピッカーを閉じたら、タスクの追加ならタスク名の入力に戻す（キーボードもまた出る） */
+  function backToTitle(pick, from) {
+    const ti = from && document.querySelector('#' + from.id + ' #tn-title');
+    if (ti) pick.back = ti;
+    return pick;
+  }
+  /** 選べるラベルの一覧（ラベルを選ぶ画面） */
+  function pickLabelsOf(p) {
+    const g = p.target || {};
+    if (g.kind === 'quick') { const q = App.sheets.find((x) => x.id === g.sheet); return q ? q.params.form.labels : []; }
+    const t = taskById(g.id);
+    return t ? (t.labels || (t.labels = [])) : [];
+  }
+  function labelPickList(p) {
+    const sel = pickLabelsOf(p);
+    const q = String(p.q || '').trim().replace(/^@/, '');
+    const all = todo().labels.slice().sort(byOrder);
+    const shown = q ? all.filter((l) => l.name.toLowerCase().indexOf(q.toLowerCase()) >= 0) : all;
+    let h = shown.map((l) => '<li><button type="button" class="pp-row" data-act="lpToggle" data-id="' + l.id + '" aria-pressed="' + (sel.indexOf(l.id) >= 0) + '"><span class="lmark" style="color:' + lcolor(l) + '">' + MI.tag + '</span><span>' + esc(l.name) + '</span>' + IC.check + '</button></li>').join('');
+    if (q && !all.some((l) => l.name === q)) h += '<li><button type="button" class="pp-row create" data-act="lpCreate"><span class="lmark">' + IC.plus + '</span><span>ラベル「' + esc(q) + '」を作成</span></button></li>';
+    if (!h) h = '<li class="empty">ラベルはまだありません。上に名前を入れると作れます。</li>';
+    return h;
+  }
+  function pickLabelsApply(p) {
+    const g = p.target || {};
+    if (g.kind === 'quick') { const q = App.sheets.find((x) => x.id === g.sheet); if (q) qaSync(q); return; }
+    commit(['todo']);
+    refreshTaskSheets();
+  }
+  // ----- タスクの追加（Todoistのクイック追加と同じ形） -----
+  function qaChips(f) {
+    const t = today();
+    const rep = f.rtype ? buildRepeat(f.rtype, f.every, f.rdays, f.date || t) : null;
+    let h;
+    if (f.date || rep) {
+      const di = dayInfo(f.date || t, t);
+      const txt = rep ? E.repeatLabel(rep) + (f.time ? ' ' + hmLabel(f.time) : '') : dueLabel({ date: f.date, time: f.time }, t);
+      h = '<span class="qchip set ' + di.cls + '"><button type="button" data-act="qaDate" aria-label="予定日：' + esc(txt) + '（変える）">' + MI.cal + esc(txt) + (rep ? MI.rep : '') + '</button>' +
+        '<button type="button" class="qx" data-act="qaDateClear" aria-label="予定日を外す">' + IC.close + '</button></span>';
+    } else h = '<span class="qchip"><button type="button" data-act="qaDate">' + MI.cal + '日付</button></span>';
+    const labs = (f.labels || []).map(labelById).filter(Boolean);
+    h += labs.length
+      ? '<span class="qchip set"><button type="button" data-act="qaLabels" aria-label="ラベル：' + esc(labs.map((l) => l.name).join('、')) + '（変える）">' + MI.tag + labs.map((l) => '<span style="color:' + lcolor(l) + '">' + esc(l.name) + '</span>').join('<i>、</i>') + '</button>' +
+        '<button type="button" class="qx" data-act="qaLabelsClear" aria-label="ラベルを外す">' + IC.close + '</button></span>'
+      : '<span class="qchip"><button type="button" data-act="qaLabels">' + MI.tag + 'ラベル</button></span>';
+    h += '<span class="qchip' + (f.reward > 0 ? ' set gold' : '') + '"><button type="button" data-act="qaReward" aria-label="報酬：' + f.reward + ' kcal（変える）">' + MI.kcal + '+' + fmt(f.reward) + ' kcal</button></span>';
+    return h;
+  }
+  function readProjectName(t) {
+    const p = projectById(t.projectId);
+    const s = p ? sectionById(t.sectionId) : null;
+    return p ? p.name + (s ? ' / ' + s.name : '') : 'Inbox';
+  }
+  function projLabel(v) {
+    const pr = readProjectSelect(v);
+    const p = projectById(pr.projectId);
+    const s = p ? sectionById(pr.sectionId) : null;
+    return (p ? '<span class="hash" style="color:' + projColor(p) + '">#</span>' : MI.inbox) + '<span>' + esc(p ? p.name + (s ? ' / ' + s.name : '') : 'Inbox') + '</span>';
+  }
+  function qaSync(q) {
+    const el = document.getElementById(q.id);
+    if (!el) return;
+    const f = q.params.form;
+    const c = el.querySelector('#tn-chips');
+    if (c) c.innerHTML = qaChips(f);
+    const pj = el.querySelector('#tn-proj');
+    if (pj) pj.innerHTML = projLabel(f.proj) + IC.down;
+  }
+  // ----- タスクの画面（Todoistと同じ：上にプロジェクト、題名と説明、日付・期限・ラベル・リマインダー・報酬の行、サブタスク） -----
+  /** 題名と説明は、入力欄から離れたとき（と閉じるとき）に保存する */
+  function saveTitleNote(sh) {
+    const t = taskById(sh.params.id);
+    const el = document.getElementById(sh.id);
+    if (!t || !el) return false;
+    const ti = el.querySelector('#te-title');
+    const no = el.querySelector('#te-note');
+    let changed = false;
+    if (ti) {
+      const v = ti.value.replace(/\s+/g, ' ').trim();
+      if (!v) ti.value = t.title; // 空にはしない（元に戻す）
+      else if (v !== t.title) { t.title = v; changed = true; }
+    }
+    if (no) {
+      const v = no.value.trim();
+      if (v !== (t.note || '')) { t.note = v; changed = true; }
+    }
+    if (changed) commit(['todo']);
+    return changed;
   }
   function subtasksBlock(t) {
     const subs = subtasksOf(t.id);
-    let h = '<h3 class="dv-h"><span>サブタスク</span><span>' + (subs.length ? subs.filter((s) => s.done).length + '/' + subs.length + ' 完了' : '') + '</span></h3>';
+    let h = '<h3 class="dv-h"><span>サブタスク</span><span>' + (subs.length ? subs.filter((s) => s.done).length + '/' + subs.length : '') + '</span></h3>';
     if (subs.length) {
       h += '<ul class="sub-edit">' + subs.map((s) => '<li class="' + (s.done ? 'done' : '') + '"><button type="button" class="tcheck' + (s.done ? ' done' : '') + '" data-act="subToggle" data-id="' + s.id + '" aria-label="「' + esc(s.title) + '」を' + (s.done ? '未完了に戻す' : '完了にする') + '"></button>' +
-        '<button type="button" class="sub-title" data-act="taskOpen" data-id="' + s.id + '">' + esc(s.title) + '</button><button type="button" class="del-btn" data-act="subDelete" data-id="' + s.id + '">削除</button></li>').join('') + '</ul>';
+        '<button type="button" class="sub-title" data-act="taskOpen" data-id="' + s.id + '">' + esc(s.title) + '</button></li>').join('') + '</ul>';
     }
-    h += '<div class="row2"><input class="input" id="te-newsub" placeholder="サブタスクを追加" maxlength="120" aria-label="新しいサブタスク"><button type="button" class="btn" data-act="subAdd">追加</button></div>';
+    h += '<div class="sub-add"><span class="al-plus">' + IC.plus + '</span><input class="sub-in" id="te-newsub" placeholder="サブタスクを追加" maxlength="120" aria-label="新しいサブタスク" enterkeyhint="done" autocomplete="off" data-enter="subAdd">' +
+      '<button type="button" class="link-btn red" data-act="subAdd">追加</button></div>';
     return h + '<p class="hint">サブタスクには報酬はありません。サブタスクをすべて完了してから親タスクを完了すると、報酬がもらえます。</p>';
   }
   function searchResults(q) {
@@ -5049,6 +5390,94 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     document.body.appendChild(b);
     setTimeout(() => b.remove(), 1300);
   }
+
+  // ----- 行の指の操作（Todoistと同じ）：右へスワイプで完了、左へスワイプで日付を選ぶ、長押しで並び替え -----
+  const Gest = { row: null, x0: 0, y0: 0, dx: 0, mode: '', timer: 0, ev: null, suppress: false };
+  function gestReset(animate) {
+    clearTimeout(Gest.timer);
+    const row = Gest.row;
+    const held = Gest.mode === 'swipe';
+    Gest.row = null;
+    Gest.mode = '';
+    if (!row) return;
+    row.classList.remove('pressing');
+    if (!row.classList.contains('swiping')) return;
+    const done = () => {
+      row.classList.remove('swiping', 'sw-done', 'sw-date', 'sw-ready', 'sw-back');
+      row.style.removeProperty('--sx');
+      // スワイプ中に止めていた描き直しを、ここで済ませる
+      if (held) { dragging = false; render(); }
+    };
+    if (animate && !reduceMotion()) { row.classList.add('sw-back'); row.style.setProperty('--sx', '0px'); setTimeout(done, 200); } else done();
+  }
+  document.addEventListener('pointerdown', (ev) => {
+    if (ev.pointerType === 'mouse' || Gest.row || dragging) return;
+    const row = ev.target.closest('.task-row[data-task-row]');
+    if (!row || ev.target.closest('.tcheck, [data-grip]')) return;
+    Object.assign(Gest, { row, x0: ev.clientX, y0: ev.clientY, dx: 0, mode: 'wait', ev });
+    if (row.classList.contains('sortable-item')) {
+      row.classList.add('pressing');
+      Gest.timer = setTimeout(() => {
+        if (Gest.row !== row || Gest.mode !== 'wait') return;
+        if (!row.isConnected) { gestReset(false); return; } // 描き直されていたら、やめる
+        row.classList.remove('pressing');
+        Gest.mode = 'drag';
+        Gest.suppress = true; // 指を離したあとのタップでタスクを開かない
+        const clear = () => setTimeout(() => { Gest.suppress = false; }, 400);
+        window.addEventListener('pointerup', clear, { once: true });
+        window.addEventListener('pointercancel', clear, { once: true });
+        startDrag(Gest.ev, row);
+        Gest.row = null;
+      }, 450);
+    }
+  });
+  document.addEventListener('pointermove', (ev) => {
+    const row = Gest.row;
+    if (!row) return;
+    const dx = ev.clientX - Gest.x0;
+    const dy = ev.clientY - Gest.y0;
+    if (Gest.mode === 'wait') {
+      if (!row.isConnected) { gestReset(false); return; }
+      if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { gestReset(false); return; } // 縦はスクロール
+      if (Math.abs(dx) < 12 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      clearTimeout(Gest.timer);
+      row.classList.remove('pressing');
+      Gest.mode = 'swipe';
+      dragging = true; // スワイプ中は描き直さない（行が入れ替わらないように）
+      row.classList.add('swiping');
+    }
+    if (Gest.mode !== 'swipe') return;
+    const w = row.getBoundingClientRect().width;
+    Gest.dx = Math.max(-w * 0.75, Math.min(w * 0.75, dx));
+    row.style.setProperty('--sx', Gest.dx + 'px');
+    row.classList.toggle('sw-done', Gest.dx > 0);
+    row.classList.toggle('sw-date', Gest.dx < 0);
+    row.classList.toggle('sw-ready', Math.abs(Gest.dx) > Math.min(110, w * 0.3));
+  });
+  function gestEnd() {
+    const row = Gest.row;
+    if (!row) return;
+    if (Gest.mode !== 'swipe') { gestReset(false); return; }
+    const ready = row.classList.contains('sw-ready');
+    const dir = Gest.dx > 0 ? 'done' : 'date';
+    Gest.suppress = true;
+    setTimeout(() => { Gest.suppress = false; }, 400);
+    const id = row.dataset.taskRow;
+    gestReset(true);
+    if (!ready) return;
+    if (dir === 'done') completeWithFx(id, row.querySelector('.tcheck'), null);
+    else TODO_ACTIONS.teDate({ dataset: { id } });
+  }
+  document.addEventListener('pointerup', gestEnd);
+  document.addEventListener('pointercancel', () => gestReset(true));
+  // スワイプ・長押しのあとに来るタップは、タスクを開かない
+  document.addEventListener('click', (ev) => {
+    if (!Gest.suppress) return;
+    Gest.suppress = false;
+    if (ev.target.closest && ev.target.closest('.task-row')) { ev.preventDefault(); ev.stopPropagation(); }
+  }, true);
+  // 並び替え中は、ページがスクロールしないようにする（iPhone）
+  document.addEventListener('touchmove', (ev) => { if (dragging) ev.preventDefault(); }, { passive: false });
 
   // ----- ToDoの操作 -----
   const TodoAct = {
@@ -5124,64 +5553,157 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   const TODO_SHEETS = {
     taskNew: {
       title: () => 'タスクを追加',
+      bare: true,
+      cls: 'quick-add',
       body(p) {
         const t = today();
         const tab = App.ui.todoTab || 'inbox';
         if (!p.form) {
           const inView = tab === 'projects' && App.ui.todoId ? App.ui.todoId : '';
           const proj = p.project || inView;
+          const label = tab === 'labels' && App.ui.todoId && App.ui.todoId.indexOf('l:') === 0 ? App.ui.todoId.slice(2) : '';
           p.form = {
-            date: p.date !== undefined ? p.date : (tab === 'today' || tab === 'upcoming' ? t : ''),
+            date: p.date !== undefined ? p.date : (tab === 'today' || tab === 'upcoming' ? t : ''), time: '',
             proj: proj ? proj + (p.section ? '|' + p.section : '') : '',
             reward: todo().settings.defaultReward,
-            label: tab === 'labels' && App.ui.todoId && App.ui.todoId.indexOf('l:') === 0 ? App.ui.todoId.slice(2) : '',
-            rtype: '', every: 1, rdays: [], rdaysAuto: false,
+            labels: label ? [label] : [],
+            rtype: '', every: 1, rdays: [],
           };
         }
         const f = p.form;
-        const pr = readProjectSelect(f.proj);
-        let h = '<form data-form="taskNew" novalidate>';
-        h += '<input class="input big-title" id="tn-title" maxlength="120" autocomplete="off" placeholder="例：資料を確認する" aria-label="タスク名" autofocus>';
-        h += field('予定日', '<input type="date" class="input" id="tn-date" data-change="tnDateIn" value="' + f.date + '"><div class="quick">' +
-          [['今日', t], ['明日', E.addDays(t, 1)], ['来週', nextMonday(t)], ['なし', '']].map((x) => '<button type="button" data-act="tnDate" data-v="' + x[1] + '">' + x[0] + '</button>').join('') + '</div>', '', 'tn-date');
-        h += repeatFields(f, 'tn');
-        h += '<div class="row2 top">' + field('プロジェクト', projectSelect('tn-proj', pr.projectId, pr.sectionId), '', 'tn-proj') +
-          field('報酬', '<div class="unit" data-unit="kcal"><input class="input" id="tn-reward" inputmode="numeric" value="' + f.reward + '"></div>', '', 'tn-reward') + '</div>';
-        if (f.label) { const l = labelById(f.label); if (l) h += '<p class="hint">ラベル「@' + esc(l.name) + '」を付けて追加します。</p>'; }
-        h += '<p class="hint bad" id="tn-err" role="alert"></p><div class="btn-row"><button class="btn primary" type="submit">追加する</button></div>';
-        return h + '<p class="hint">追加したあとも続けて入力できます。ラベル・期限・リマインダー・サブタスクは、追加したタスクを開いて設定します。</p></form>';
+        return '<form data-form="taskNew" class="qa" novalidate>' +
+          '<input class="qa-title" id="tn-title" maxlength="120" autocomplete="off" placeholder="タスク名" aria-label="タスク名" autofocus data-input="qaTitle" enterkeyhint="send">' +
+          '<textarea class="qa-desc" id="tn-note" rows="1" maxlength="2000" placeholder="説明" aria-label="説明" data-grow="1"></textarea>' +
+          '<div class="qa-chips" id="tn-chips">' + qaChips(f) + '</div>' +
+          '<p class="hint bad" id="tn-err" role="alert"></p>' +
+          '<div class="qa-foot"><button type="button" class="qa-proj" data-act="qaProj" id="tn-proj" aria-label="プロジェクトを選ぶ">' + projLabel(f.proj) + IC.down + '</button>' +
+          '<button type="submit" class="qa-send" id="tn-send" aria-label="タスクを追加" disabled>' + MI.up + '</button></div></form>';
       },
     },
     taskEdit: {
       title(p) { const t = taskById(p.id); return t && t.parentId ? 'サブタスク' : 'タスク'; },
+      head(p, sh) {
+        const t = taskById(p.id);
+        let crumb = '<span></span>';
+        if (t && t.parentId) {
+          const par = taskById(t.parentId);
+          if (par) crumb = '<button class="te-crumb" data-act="taskOpen" data-id="' + par.id + '">' + MI.sub + '<span>' + esc(par.title) + '</span></button>';
+        } else if (t) {
+          crumb = '<button class="te-crumb" data-act="teMove" data-id="' + t.id + '" aria-label="プロジェクトを変える（いまは「' + esc(readProjectName(t)) + '」）">' + projLabel((t.projectId || '') + (t.sectionId ? '|' + t.sectionId : '')) + IC.down + '</button>';
+        }
+        return '<div class="sheet-head te-top"><h2 id="' + sh.id + '-t" class="sr-only" tabindex="-1">' + (t && t.parentId ? 'サブタスク' : 'タスク') + '</h2>' + crumb +
+          '<span class="te-acts">' + (t ? '<button class="icon-btn" data-act="taskMenu" data-id="' + t.id + '" aria-label="タスクのメニュー（複製・削除）">' + IC.more + '</button>' : '') +
+          '<button class="icon-btn" data-act="close" aria-label="閉じる">' + IC.close + '</button></span></div>';
+      },
       body(p) {
         const t = taskById(p.id);
         if (!t) return '<p class="empty">このタスクは見つかりません（完了または削除されています）。</p>';
-        if (!p.draft) p.draft = draftOf(t);
-        const f = p.draft;
-        let h = '<form data-form="taskEdit" novalidate>';
-        if (t.parentId) {
-          const par = taskById(t.parentId);
-          if (par) h += '<button type="button" class="link-btn" data-act="taskOpen" data-id="' + par.id + '">↳ ' + esc(par.title) + '</button>';
+        const tt = today();
+        let h = '<div class="te-head"><button type="button" class="tcheck" data-act="taskDone" data-id="' + t.id + '" aria-label="完了にする"></button>' +
+          '<textarea class="te-title" id="te-title" rows="1" maxlength="120" aria-label="タスク名" data-grow="1" data-change="teTitle" data-enter="teTitleEnter" enterkeyhint="done">' + esc(t.title) + '</textarea></div>';
+        h += '<div class="te-noterow">' + MI.note + '<textarea class="te-note" id="te-note" rows="1" placeholder="説明" aria-label="説明" data-grow="1" data-change="teNote">' + esc(t.note || '') + '</textarea></div>';
+        const row = (act, ic, label, val, cls) => '<button class="te-row' + (val ? '' : ' empty') + '" data-act="' + act + '" data-id="' + t.id + '"><span class="te-ri' + (cls ? ' ' + cls : '') + '">' + ic + '</span>' +
+          '<span class="te-rl">' + label + '</span><span class="te-rv' + (cls ? ' ' + cls : '') + '">' + (val || 'なし') + '</span>' + IC.chev + '</button>';
+        let due = '';
+        let dueCls = '';
+        if (t.due) {
+          dueCls = dayInfo(t.due.date, tt).cls;
+          due = esc(dueLabel(t.due, tt)) + (t.repeat ? '<span class="te-rep">' + MI.rep + esc(E.repeatLabel(t.repeat)) + '</span>' : '');
         }
-        h += '<div class="te-head"><button type="button" class="tcheck" data-act="taskDone" data-id="' + t.id + '" aria-label="完了にする"></button>' +
-          '<input class="input te-title" id="te-title" value="' + esc(f.title) + '" maxlength="120" aria-label="タスク名"></div>';
-        h += '<textarea class="input te-note" id="te-note" rows="2" placeholder="メモ" aria-label="メモ">' + esc(f.note) + '</textarea>';
-        if (!t.parentId) {
-          const pr = readProjectSelect(f.proj);
-          h += field('プロジェクト', projectSelect('te-proj', pr.projectId, pr.sectionId), '', 'te-proj');
-        }
-        h += field('予定日', '<div class="row2"><input type="date" class="input" id="te-date" value="' + f.date + '"><input type="time" class="input" id="te-time" value="' + f.time + '" aria-label="時刻（任意）"></div>', '時刻は任意です。', 'te-date');
-        h += field('期限', '<input type="date" class="input" id="te-deadline" value="' + f.deadline + '">', '予定日とは別の締め切りです。', 'te-deadline');
-        if (!t.parentId) h += repeatFields(f);
-        h += field('ラベル', labelChips(f.labels) + '<div class="row2" style="margin-top:8px"><input class="input" id="te-newlabel" placeholder="新しいラベル" maxlength="20" aria-label="新しいラベル"><button type="button" class="btn" data-act="teAddLabel">作成</button></div>');
-        h += field('リマインダー', '<input type="datetime-local" class="input" id="te-rem" value="' + f.reminder + '">', (Native.on ? '指定した日時に、iPhoneの通知でお知らせします。' : 'Web版は、アプリを開いたときにホームでお知らせします。') + notifyDeniedHint(), 'te-rem');
-        if (!t.parentId) {
-          h += field('完了したときの報酬', '<div class="unit" data-unit="kcal"><input class="input" id="te-reward" inputmode="numeric" value="' + f.reward + '"></div>', '変更は、これからの完了分から反映されます。習慣と同じ1日の上限で数えます。', 'te-reward');
-        }
-        h += '<p class="hint bad" id="te-err" role="alert"></p><div class="btn-row"><button class="btn primary" type="submit">保存する</button></div>';
+        const labs = (t.labels || []).map(labelById).filter(Boolean).map((l) => '<span style="color:' + lcolor(l) + '">' + esc(l.name) + '</span>').join('<i>、</i>');
+        h += '<div class="te-rows">' + row('teDate', MI.cal, '日付', due, dueCls) +
+          row('teDeadline', MI.target, '期限', t.deadline ? esc(dayInfo(t.deadline, tt).label) : '', t.deadline && t.deadline <= E.addDays(tt, 1) ? 'over' : '') +
+          row('teLabels', MI.tag, 'ラベル', labs) +
+          row('teRem', MI.alarm, 'リマインダー', t.reminder ? esc(remLabel(t.reminder, tt)) : '') +
+          (t.parentId ? '' : row('teReward', MI.kcal, '報酬', t.reward > 0 ? '+' + fmt(t.reward) + ' kcal' : '', 'gold')) + '</div>';
         if (!t.parentId) h += subtasksBlock(t);
-        return h + '<div class="btn-row"><button type="button" class="btn danger" data-act="taskDelete" data-id="' + t.id + '">このタスクを削除</button></div></form>';
+        return h;
+      },
+      beforeClose(sh) { saveTitleNote(sh); },
+    },
+    taskMenu: {
+      title: (p) => { const t = taskById(p.id); return t ? esc(t.title) : 'タスク'; },
+      body(p) {
+        const t = taskById(p.id);
+        const item = (act, ic, label, sub, cls) => '<button class="menu-row' + (cls ? ' ' + cls : '') + '" data-act="' + act + '" data-id="' + p.id + '">' + ic + '<span><b>' + label + '</b><small>' + sub + '</small></span></button>';
+        return '<div class="menu-list">' + item('tmDup', DI.copy, '複製', t && !t.parentId && subtasksOf(t.id).length ? 'サブタスクも一緒に複製します' : '同じ内容のタスクをもう1つ作ります') +
+          item('tmDel', DI.trash, '削除', t && !t.parentId ? 'サブタスクも一緒に削除されます' : 'このサブタスクを削除します', 'danger') + '</div>';
+      },
+    },
+    datePick: {
+      title: (p) => p.title || '予定日',
+      body(p) {
+        const t = today();
+        const w = E.weekday(t);
+        const wk = weekendOf(t);
+        const nm = nextMonday(t);
+        const opt = (cls, ic, label, d, side) => '<li><button type="button" class="dp-opt ' + cls + '" data-act="dpSet" data-v="' + d + '"' + (p.date === d ? ' aria-current="true"' : '') + '>' + ic + '<span>' + label + '</span><small>' + side + '</small></button></li>';
+        let h = '<p class="dp-now">' + esc(pickSummary(p)) + '</p><ul class="dp-quick">' +
+          opt('c-today', todayIcon(t), '今日', t, E.WD_NAMES[w]) +
+          opt('c-tomorrow', DI.sun, '明日', E.addDays(t, 1), E.WD_NAMES[E.weekday(E.addDays(t, 1))]) +
+          opt('c-weekend', DI.sofa, w === 6 || w === 0 ? '来週末' : '今週末', wk, '土 ' + shortDate(wk)) +
+          opt('c-next', DI.next, '来週', nm, '月 ' + shortDate(nm)) +
+          (p.allowNone ? opt('c-none', DI.none, p.kind === 'deadline' ? '期限なし' : '日付なし', '', '') : '') + '</ul>';
+        h += pickCalendar(p, t);
+        if (p.withTime) {
+          h += '<div class="dp-row"><span class="dp-ri">' + MI.alarm + '</span><label for="dp-time">時間</label><input type="time" class="input dp-time" id="dp-time" data-change="dpTime" value="' + (p.time || '') + '">' +
+            (p.time ? '<button type="button" class="link-btn" data-act="dpTimeClear">なし</button>' : '') + '</div>';
+        }
+        if (p.withRepeat) {
+          const base = p.date || t;
+          const cur = p.rtype ? E.repeatLabel(buildRepeat(p.rtype, p.every, p.rdays, base)) : 'なし';
+          h += '<button type="button" class="dp-row" data-act="dpRepToggle" aria-expanded="' + !!p.repOpen + '"><span class="dp-ri">' + MI.rep + '</span><span>繰り返し</span><b>' + esc(cur) + '</b>' + IC.down + '</button>';
+          if (p.repOpen) {
+            const same = (v) => (v === '' ? !p.rtype : p.rtype === v && (p.every || 1) === 1 && (v !== 'weekly' || (p.rdays.length === 1 && p.rdays[0] === E.weekday(base))));
+            h += '<ul class="dp-reps">' + [['', 'なし']].concat(repeatPresets(base)).map((x) => '<li><button type="button" class="dp-rep" data-act="dpRep" data-v="' + x[0] + '"' + (same(x[0]) ? ' aria-current="true"' : '') + '>' + x[1] + (same(x[0]) ? IC.check : '') + '</button></li>').join('') +
+              '<li><button type="button" class="dp-rep" data-act="dpRepCustom" aria-expanded="' + !!p.custom + '">カスタム…</button></li></ul>';
+            if (p.custom) {
+              const unit = p.cunit || 'daily';
+              h += '<form data-form="dpCustom" class="dp-custom" novalidate><div class="row2 every"><input type="number" class="input" id="dp-every" min="1" max="30" value="' + (p.cevery || 1) + '" aria-label="間隔">' +
+                '<select class="input" id="dp-unit" data-change="dpUnit" aria-label="単位">' + [['daily', '日ごと'], ['weekly', '週ごと'], ['monthly', 'か月ごと']].map((x) => '<option value="' + x[0] + '"' + (unit === x[0] ? ' selected' : '') + '>' + x[1] + '</option>').join('') + '</select></div>' +
+                '<div class="wds" id="dp-wds" style="margin-top:8px"' + (unit === 'weekly' ? '' : ' hidden') + '>' + E.WD_ORDER.map((d) => '<button type="button" data-act="dpWd" data-v="' + d + '" aria-pressed="' + ((p.crdays || []).indexOf(d) >= 0) + '" aria-label="' + E.WD_NAMES[d] + '曜日">' + E.WD_NAMES[d] + '</button>').join('') + '</div>' +
+                '<div class="btn-row"><button class="btn primary" type="submit">設定する</button></div></form>';
+            }
+          }
+          h += '<p class="hint">繰り返しは予定日を起点にします。完了するたびに報酬がもらえ、次の予定日へ進みます。</p>';
+        }
+        return h;
+      },
+    },
+    projPick: {
+      title: () => 'プロジェクト',
+      body(p) {
+        const row = (v, ic, name, cls) => '<li><button type="button" class="pp-row' + (cls ? ' ' + cls : '') + '" data-act="ppSet" data-v="' + v + '" aria-pressed="' + (p.cur === v) + '">' + ic + '<span>' + name + '</span>' + IC.check + '</button></li>';
+        let h = '<ul class="pp-list">' + row('', '<span class="lmark">' + MI.inbox + '</span>', 'Inbox');
+        for (const pr of projectsOf(false)) {
+          h += row(pr.id, '<span class="hash big" style="color:' + projColor(pr) + '">#</span>', esc(pr.name));
+          for (const s of todo().sections.filter((x) => x.projectId === pr.id).sort(byOrder)) h += row(pr.id + '|' + s.id, '<span class="lmark">' + IC.section + '</span>', esc(s.name), 'sec');
+        }
+        return h + '</ul>';
+      },
+    },
+    labelPick: {
+      title: () => 'ラベル',
+      body(p) {
+        return '<input class="input" id="lp-q" data-input="lpQuery" data-enter="lpCreate" placeholder="ラベル名で探す・作る" aria-label="ラベル名で探す・作る" autocomplete="off" enterkeyhint="done" value="' + esc(p.q || '') + '">' +
+          '<ul class="pp-list" id="lp-list">' + labelPickList(p) + '</ul>';
+      },
+    },
+    rewardPick: {
+      title: () => '完了したときの報酬',
+      body(p) {
+        return '<form data-form="rewardPick" novalidate><div class="unit" data-unit="kcal"><input class="input big" id="rw-v" inputmode="numeric" autocomplete="off" value="' + p.value + '" aria-label="報酬（kcal）" autofocus></div>' +
+          '<div class="quick">' + [0, 20, 50, 100, 150, 200].map((v) => '<button type="button" data-act="rwQuick" data-v="' + v + '">' + v + '</button>').join('') + '</div>' +
+          '<p class="hint">' + ((p.target || {}).kind === 'task' ? '変更は、これからの完了分から反映されます。' : '') + '習慣と同じ1日の上限で数えます。</p><p class="hint bad" id="rw-err" role="alert"></p>' +
+          '<div class="btn-row"><button class="btn primary" type="submit">設定する</button></div></form>';
+      },
+    },
+    remPick: {
+      title: () => 'リマインダー',
+      body(p) {
+        return '<form data-form="remPick" novalidate><input type="datetime-local" class="input" id="rp-dt" value="' + (p.value || '') + '" aria-label="お知らせする日時">' +
+          '<p class="hint">' + (Native.on ? '指定した日時に、iPhoneの通知でお知らせします。' : 'Web版は、アプリを開いたときにホームでお知らせします。') + notifyDeniedHint() + '</p><p class="hint bad" id="rp-err" role="alert"></p>' +
+          '<div class="btn-row"><button class="btn primary" type="submit">設定する</button>' + (p.had ? '<button type="button" class="btn ghost" data-act="remClear">外す</button>' : '') + '</div></form>';
       },
     },
     comp: {
@@ -5217,6 +5739,15 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         return h + '</form>';
       },
     },
+    projMenu: {
+      title: (p) => { const pr = projectById(p.id); return pr ? esc(pr.name) : 'プロジェクト'; },
+      body(p) {
+        const item = (act, ic, t, sub) => '<button class="menu-row" data-act="' + act + '" data-id="' + p.id + '">' + ic + '<span><b>' + t + '</b><small>' + sub + '</small></span>' + IC.chev + '</button>';
+        return '<div class="menu-list">' +
+          item('pmSecNew', IC.section, 'セクションを追加', 'プロジェクトの中を区切って、タスクを分けます') +
+          item('pmEdit', IC.pencil, 'プロジェクトを編集', '名前・色・アーカイブ') + '</div>';
+      },
+    },
     secForm: {
       title: (p) => (p.id ? 'セクションを編集' : 'セクションを追加'),
       body(p) {
@@ -5241,7 +5772,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     },
   };
 
-  function afterTaskSheetChange(sh) { if (sh) { readDraft(sh); fillSheet(sh); } }
+  function afterTaskSheetChange(sh) { if (sh) fillSheet(sh); }
   function completeWithFx(id, el, sh) {
     const t = taskById(id);
     if (!t) return;
@@ -5294,14 +5825,16 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       if (el.dataset.section) p.section = el.dataset.section;
       openSheet('taskNew', p);
     },
-    taskOpen(el) { openSheet('taskEdit', { id: el.dataset.id }); },
+    taskOpen(el) {
+      // サブタスクを開くときは、いまのタスクの画面の題名・説明を保存してから
+      const cur = App.sheets.find((x) => x.type === 'taskEdit');
+      if (cur) saveTitleNote(cur);
+      openSheet('taskEdit', { id: el.dataset.id });
+    },
     taskDone(el, sh) { completeWithFx(el.dataset.id, el, sh); },
     taskReschedule() {
-      const t = today();
-      const l = todayLists(t);
-      l.overdue.forEach((x) => { if (x.due) x.due.date = t; else x.deadline = t; });
-      commit(['todo']);
-      toast(l.overdue.length + '件を今日に移動しました');
+      if (!overdueTasks(today()).length) return;
+      openSheet('datePick', { title: '日程を変更', target: { kind: 'overdue' }, kind: 'overdue', date: '', time: '', rtype: '', every: 1, rdays: [] });
     },
     taskDelete(el, sh) {
       const t = taskById(el.dataset.id);
@@ -5318,41 +5851,148 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         },
       });
     },
-    tnDate(el, sh) {
-      const inp = document.querySelector('#' + sh.id + ' #tn-date');
-      inp.value = el.dataset.v;
-      sh.params.form.date = el.dataset.v;
-      tnAutoDays(inp.form, sh.params.form);
-    },
-    tnWd(el, sh) {
+    // タスクの追加：チップから日付・ラベル・報酬・プロジェクトを選ぶ
+    qaDate(el, sh) {
       const f = sh.params.form;
-      toggleIn(f.rdays, +el.dataset.v);
-      f.rdaysAuto = false; // 自分で選んだ曜日は、予定日を変えてもそのまま
-      el.setAttribute('aria-pressed', String(f.rdays.indexOf(+el.dataset.v) >= 0));
+      backToTitle(openSheet('datePick', { target: { kind: 'quick', sheet: sh.id }, kind: 'due', date: f.date, time: f.time || '', rtype: f.rtype, every: f.every, rdays: f.rdays.slice(), withTime: true, withRepeat: true, allowNone: true }), sh);
     },
-    teLabel(el, sh) {
-      toggleIn(sh.params.draft.labels, el.dataset.id);
-      el.setAttribute('aria-pressed', String(sh.params.draft.labels.indexOf(el.dataset.id) >= 0));
+    qaDateClear(el, sh) { Object.assign(sh.params.form, { date: '', time: '', rtype: '', every: 1, rdays: [] }); qaSync(sh); },
+    qaLabels(el, sh) { backToTitle(openSheet('labelPick', { target: { kind: 'quick', sheet: sh.id } }), sh); },
+    qaLabelsClear(el, sh) { sh.params.form.labels = []; qaSync(sh); },
+    qaReward(el, sh) { backToTitle(openSheet('rewardPick', { target: { kind: 'quick', sheet: sh.id }, value: sh.params.form.reward }), sh); },
+    qaProj(el, sh) { backToTitle(openSheet('projPick', { target: { kind: 'quick', sheet: sh.id }, cur: sh.params.form.proj }), sh); },
+    // 日付を選ぶ画面
+    dpSet(el, sh) {
+      const p = sh.params;
+      p.date = el.dataset.v;
+      if (!p.date) { p.time = ''; p.rtype = ''; }
+      pickApply(sh, true);
     },
-    teWd(el, sh) { readDraft(sh); toggleIn(sh.params.draft.rdays, +el.dataset.v); fillSheet(sh); },
-    teAddLabel(el, sh) {
-      const inp = document.querySelector('#' + sh.id + ' #te-newlabel');
-      const name = (inp.value || '').trim().replace(/^@/, '');
+    dpMonth(el, sh) {
+      const p = sh.params;
+      const ym = (p.view || (p.date || today()).slice(0, 7)).split('-').map(Number);
+      const d = new Date(ym[0], ym[1] - 1 + Number(el.dataset.d), 1);
+      p.view = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+      fillSheet(sh);
+    },
+    dpTimeClear(el, sh) { sh.params.time = ''; pickApply(sh, false); },
+    dpRepToggle(el, sh) { sh.params.repOpen = !sh.params.repOpen; fillSheet(sh); },
+    dpRep(el, sh) {
+      const p = sh.params;
+      const v = el.dataset.v;
+      if (!p.date && v) p.date = today();
+      Object.assign(p, { rtype: v, every: 1, rdays: v === 'weekly' ? [E.weekday(p.date)] : [] });
+      pickApply(sh, true);
+    },
+    dpRepCustom(el, sh) {
+      const p = sh.params;
+      p.custom = !p.custom;
+      if (p.custom) {
+        p.cunit = ['daily', 'weekly', 'monthly'].indexOf(p.rtype) >= 0 ? p.rtype : 'daily';
+        p.cevery = p.every || 1;
+        p.crdays = p.rdays.length ? p.rdays.slice() : [E.weekday(p.date || today())];
+      }
+      fillSheet(sh);
+    },
+    dpWd(el, sh) {
+      const p = sh.params;
+      toggleIn(p.crdays, +el.dataset.v);
+      el.setAttribute('aria-pressed', String(p.crdays.indexOf(+el.dataset.v) >= 0));
+    },
+    // プロジェクト・ラベル・報酬・リマインダーを選ぶ画面
+    ppSet(el, sh) {
+      const g = sh.params.target || {};
+      const v = el.dataset.v;
+      if (g.kind === 'quick') {
+        const q = App.sheets.find((x) => x.id === g.sheet);
+        if (q) { q.params.form.proj = v; qaSync(q); }
+      } else {
+        const t = taskById(g.id);
+        if (t) {
+          const pr = readProjectSelect(v);
+          if (pr.projectId !== (t.projectId || null) || pr.sectionId !== (t.sectionId || null)) {
+            t.projectId = pr.projectId;
+            t.sectionId = pr.sectionId;
+            subtasksOf(t.id).forEach((x) => { x.projectId = pr.projectId; x.sectionId = pr.sectionId; });
+            commit(['todo']);
+            refreshTaskSheets();
+          }
+        }
+      }
+      closeSheet(sh.id);
+    },
+    lpToggle(el, sh) {
+      const sel = pickLabelsOf(sh.params);
+      toggleIn(sel, el.dataset.id);
+      el.setAttribute('aria-pressed', String(sel.indexOf(el.dataset.id) >= 0));
+      pickLabelsApply(sh.params);
+    },
+    lpCreate(el, sh) {
+      const p = sh.params;
+      const name = String(p.q || '').trim().replace(/^@/, '').slice(0, 20);
       if (!name) return;
-      readDraft(sh);
       let l = todo().labels.find((x) => x.name === name);
       if (!l) {
         l = { id: newId('l'), name, color: 'ai', order: todo().labels.length };
         todo().labels.push(l);
-        commit(['todo']);
       }
-      if (sh.params.draft.labels.indexOf(l.id) < 0) sh.params.draft.labels.push(l.id);
+      const sel = pickLabelsOf(p);
+      if (sel.indexOf(l.id) < 0) sel.push(l.id);
+      p.q = '';
+      commit(['todo']);
+      pickLabelsApply(p);
       fillSheet(sh);
+    },
+    rwQuick(el, sh) { const i = document.querySelector('#' + sh.id + ' #rw-v'); i.value = el.dataset.v; },
+    remClear(el, sh) {
+      const t = taskById(sh.params.id);
+      if (t) { t.reminder = null; commit(['todo']); refreshTaskSheets(); }
+      closeSheet(sh.id);
+    },
+    // タスクの画面：行から、それぞれ選ぶ画面を開く
+    teTitleEnter(el) { el.blur(); },
+    teDate(el) {
+      const t = taskById(el.dataset.id);
+      if (!t) return;
+      const rp = t.repeat || {};
+      openSheet('datePick', { target: { kind: 'task', id: t.id }, kind: 'due', date: t.due ? t.due.date : '', time: t.due && t.due.time ? t.due.time : '', rtype: t.repeat ? rp.type : '', every: rp.every || 1, rdays: (rp.days || []).slice(), withTime: true, withRepeat: !t.parentId, allowNone: true });
+    },
+    teDeadline(el) {
+      const t = taskById(el.dataset.id);
+      if (t) openSheet('datePick', { title: '期限', target: { kind: 'deadline', id: t.id }, kind: 'deadline', date: t.deadline || '', time: '', rtype: '', every: 1, rdays: [], allowNone: true });
+    },
+    teLabels(el) { if (taskById(el.dataset.id)) openSheet('labelPick', { target: { kind: 'task', id: el.dataset.id } }); },
+    teRem(el) {
+      const t = taskById(el.dataset.id);
+      if (t) openSheet('remPick', { id: t.id, had: !!t.reminder, value: t.reminder || ((t.due ? t.due.date : today()) + 'T' + (t.due && t.due.time ? t.due.time : '09:00')) });
+    },
+    teReward(el) { const t = taskById(el.dataset.id); if (t) openSheet('rewardPick', { target: { kind: 'task', id: t.id }, value: t.reward || 0 }); },
+    teMove(el) { const t = taskById(el.dataset.id); if (t) openSheet('projPick', { target: { kind: 'task', id: t.id }, cur: (t.projectId || '') + (t.sectionId ? '|' + t.sectionId : '') }); },
+    taskMenu(el) { openSheet('taskMenu', { id: el.dataset.id }); },
+    tmDup(el) {
+      const id = el.dataset.id;
+      closeSheet();
+      const t = taskById(id);
+      if (!t) return;
+      const now = Date.now();
+      const copy = JSON.parse(JSON.stringify(t));
+      Object.assign(copy, { id: newId('t'), done: false, createdAt: now, order: (t.order || 0) + 0.5 });
+      delete copy.doneAt;
+      const list = todo().tasks;
+      list.push(copy);
+      subtasksOf(id).forEach((x) => { const c = JSON.parse(JSON.stringify(x)); Object.assign(c, { id: newId('t'), parentId: copy.id, createdAt: now }); list.push(c); });
+      commit(['todo']);
+      toast('「' + t.title + '」を複製しました');
+    },
+    tmDel(el) {
+      const id = el.dataset.id;
+      closeSheet();
+      TODO_ACTIONS.taskDelete({ dataset: { id } }, App.sheets.find((x) => x.type === 'taskEdit' && x.params.id === id));
     },
     subToggle(el, sh) {
       const s = taskById(el.dataset.id);
       if (!s) return;
-      readDraft(sh);
+      saveTitleNote(sh);
       s.done = !s.done;
       if (s.done) s.doneAt = Date.now(); else delete s.doneAt;
       commit(['todo']);
@@ -5362,7 +6002,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       const inp = document.querySelector('#' + sh.id + ' #te-newsub');
       const title = (inp.value || '').trim();
       if (!title) return;
-      readDraft(sh);
+      saveTitleNote(sh);
       const par = taskById(sh.params.id);
       if (!par) return;
       const order = subtasksOf(par.id).reduce((m, x) => Math.max(m, x.order || 0), -1) + 1;
@@ -5371,12 +6011,6 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       fillSheet(sh);
       const again = document.querySelector('#' + sh.id + ' #te-newsub');
       if (again) again.focus();
-    },
-    subDelete(el, sh) {
-      readDraft(sh);
-      todo().tasks = todo().tasks.filter((x) => x.id !== el.dataset.id);
-      commit(['todo']);
-      fillSheet(sh);
     },
     compOpen(el) { openSheet('comp', { id: el.dataset.id }); },
     compUndo(el, sh) {
@@ -5388,6 +6022,9 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     },
     projNew() { openSheet('projForm', {}); },
     projEdit(el) { openSheet('projForm', { id: el.dataset.id }); },
+    projMenu(el) { openSheet('projMenu', { id: el.dataset.id }); },
+    pmSecNew(el) { const id = el.dataset.id; closeSheet(); openSheet('secForm', { projectId: id }); },
+    pmEdit(el) { const id = el.dataset.id; closeSheet(); openSheet('projForm', { id }); },
     projOpen(el) {
       const p = projectById(el.dataset.id);
       closeAllSheets();
@@ -5507,66 +6144,58 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   const TODO_FORMS = {
     taskNew(form, sh) {
       const titleEl = form.querySelector('#tn-title');
-      const title = titleEl.value.trim();
+      const noteEl = form.querySelector('#tn-note');
+      const title = titleEl.value.replace(/\s+/g, ' ').trim();
       const err = form.querySelector('#tn-err');
       if (!title) { err.textContent = 'タスク名を入力してください。'; titleEl.focus(); return; }
-      const reward = toInt(form.querySelector('#tn-reward').value);
-      if (!(reward >= 0 && reward <= 5000)) { err.textContent = '報酬は 0〜5000 の整数で入力してください。'; return; }
-      const date = form.querySelector('#tn-date').value;
-      const pr = readProjectSelect(form.querySelector('#tn-proj').value);
       const f = sh.params.form;
-      f.proj = form.querySelector('#tn-proj').value;
-      f.date = date;
-      f.reward = reward;
-      // 繰り返し：予定日がなければ今日から
-      const due = date || (f.rtype ? today() : '');
-      const every = Math.max(1, Math.min(30, toInt(form.querySelector('#tn-every').value) || 1));
-      const repeat = f.rtype ? buildRepeat(f.rtype, every, f.rdays, due) : null;
-      TodoAct.add({ title, projectId: pr.projectId, sectionId: pr.sectionId, reward, due: due ? { date: due } : null, repeat, labels: f.label ? [f.label] : [] });
+      const pr = readProjectSelect(f.proj);
+      // 繰り返し・時間だけ決めて日付がなければ、今日から
+      const due = f.date || (f.rtype || f.time ? today() : '');
+      const repeat = f.rtype && due ? buildRepeat(f.rtype, f.every, f.rdays, due) : null;
+      TodoAct.add({
+        title, note: noteEl.value.trim(), projectId: pr.projectId, sectionId: pr.sectionId, reward: f.reward,
+        due: due ? (f.time ? { date: due, time: f.time } : { date: due }) : null, repeat, labels: (f.labels || []).slice(),
+      });
       err.textContent = '';
       titleEl.value = '';
+      noteEl.value = '';
+      grow(noteEl);
+      form.querySelector('#tn-send').disabled = true;
       titleEl.focus();
-      // 繰り返しは1件ずつ選ぶ。続けて追加するタスクが、うっかり繰り返しにならないよう「なし」に戻す
-      if (repeat) {
-        Object.assign(f, { rtype: '', every: 1, rdays: [], rdaysAuto: false });
-        form.querySelector('#tn-every').value = 1;
-        syncRepeat(form, f);
-      }
+      // 繰り返しは1件ずつ選ぶ。続けて追加するタスクが、うっかり繰り返しにならないよう外す
+      if (repeat) { Object.assign(f, { rtype: '', every: 1, rdays: [] }); qaSync(sh); }
       toast('「' + title + '」を追加しました' + (repeat ? '（' + E.repeatLabel(repeat) + '）' : ''));
     },
-    taskEdit(form, sh) {
-      const t = taskById(sh.params.id);
-      if (!t) return;
-      const f = readDraft(sh);
-      const err = form.querySelector('#te-err');
-      const title = String(f.title || '').trim();
-      if (!title) { err.textContent = 'タスク名を入力してください。'; return; }
-      let reward = t.reward || 0;
-      if (!t.parentId) {
-        reward = toInt(f.reward);
-        if (!(reward >= 0 && reward <= 5000)) { err.textContent = '報酬は 0〜5000 の整数で入力してください。'; return; }
+    rewardPick(form, sh) {
+      const v = toInt(form.querySelector('#rw-v').value);
+      const err = form.querySelector('#rw-err');
+      if (!(v >= 0 && v <= 5000)) { err.textContent = '報酬は 0〜5000 の整数で入力してください。'; return; }
+      const g = sh.params.target || {};
+      if (g.kind === 'quick') {
+        const q = App.sheets.find((x) => x.id === g.sheet);
+        if (q) { q.params.form.reward = v; qaSync(q); }
+      } else {
+        const t = taskById(g.id);
+        if (t) { t.reward = v; commit(['todo']); refreshTaskSheets(); }
       }
-      if (f.time && !f.date) { err.textContent = '時刻を入れるときは、予定日も入れてください。'; return; }
-      let date = f.date;
-      if (f.rtype && !date) date = today();
-      const repeat = !t.parentId && f.rtype ? buildRepeat(f.rtype, f.every, f.rdays, date) : null;
-      const patch = {
-        title, note: String(f.note || '').trim(), labels: f.labels.slice(),
-        due: date ? (f.time ? { date, time: f.time } : { date }) : null,
-        deadline: f.deadline || null, repeat, reminder: f.reminder || null, reward,
-      };
-      if (!t.parentId) {
-        const pr = readProjectSelect(f.proj);
-        patch.projectId = pr.projectId;
-        patch.sectionId = pr.sectionId;
-        if (pr.projectId !== (t.projectId || null) || pr.sectionId !== (t.sectionId || null)) {
-          subtasksOf(t.id).forEach((s) => { s.projectId = pr.projectId; s.sectionId = pr.sectionId; });
-        }
-      }
-      Object.assign(t, patch);
       closeSheet(sh.id);
-      commit(['todo']);
-      toast('保存しました');
+    },
+    remPick(form, sh) {
+      const v = form.querySelector('#rp-dt').value;
+      const err = form.querySelector('#rp-err');
+      if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(v)) { err.textContent = 'お知らせする日時を選んでください。'; return; }
+      const t = taskById(sh.params.id);
+      if (t) { t.reminder = v.slice(0, 16); commit(['todo']); refreshTaskSheets(); }
+      closeSheet(sh.id);
+    },
+    dpCustom(form, sh) {
+      const p = sh.params;
+      p.cunit = form.querySelector('#dp-unit').value;
+      p.cevery = Math.max(1, Math.min(30, toInt(form.querySelector('#dp-every').value) || 1));
+      if (!p.date) p.date = today();
+      Object.assign(p, { rtype: p.cunit, every: p.cevery, rdays: p.cunit === 'weekly' ? (p.crdays.length ? p.crdays.slice() : [E.weekday(p.date)]) : [] });
+      pickApply(sh, true);
     },
     compDate(form, sh) {
       const v = form.querySelector('#cp-date').value;
@@ -5634,19 +6263,33 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   };
 
   const TODO_CHANGES = {
-    teRepeat(el, sh) { readDraft(sh); sh.params.draft.rtype = el.value; fillSheet(sh); },
-    tnRepeat(el, sh) {
-      const f = sh.params.form;
-      f.rtype = el.value;
-      if (f.rtype === 'weekly' && !f.rdays.length) f.rdaysAuto = true;
-      syncRepeat(el.form, f);
-      tnAutoDays(el.form, f);
+    teTitle(el, sh) { saveTitleNote(sh); },
+    teNote(el, sh) { saveTitleNote(sh); },
+    dpTime(el, sh) {
+      const p = sh.params;
+      p.time = el.value;
+      if (p.time && !p.date) p.date = today();
+      pickApply(sh, false);
     },
-    tnDateIn(el, sh) { sh.params.form.date = el.value; tnAutoDays(el.form, sh.params.form); },
+    dpUnit(el, sh) {
+      const p = sh.params;
+      p.cunit = el.value;
+      const ev = document.querySelector('#' + sh.id + ' #dp-every');
+      if (ev) p.cevery = Math.max(1, Math.min(30, toInt(ev.value) || 1));
+      fillSheet(sh);
+    },
   };
+
   const TODO_INPUTS = {
     tsQuery(el, sh) { sh.params.q = el.value; refreshSearch(sh); },
+    qaTitle(el) { const b = el.form && el.form.querySelector('#tn-send'); if (b) b.disabled = !el.value.trim(); },
+    lpQuery(el, sh) {
+      sh.params.q = el.value;
+      const ul = document.querySelector('#' + sh.id + ' #lp-list');
+      if (ul) ul.innerHTML = labelPickList(sh.params);
+    },
   };
+
 
   /** ホームのお知らせ：時刻を過ぎたタスクのリマインダー */
   function taskReminderNotice() {
@@ -6154,8 +6797,18 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     if (fn) fn(el, sheetOf(el));
   });
   document.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Escape' && App.sheets.length) { ev.preventDefault(); closeSheet(); }
+    if (ev.key === 'Escape' && App.sheets.length) { ev.preventDefault(); closeSheet(); return; }
+    // data-enter：Enterでその操作をする（日本語の変換を確定するEnterでは動かさない）
+    const el = ev.target.closest && ev.target.closest('[data-enter]');
+    if (el && ev.key === 'Enter' && !ev.isComposing && ev.keyCode !== 229) {
+      const fn = ACTIONS[el.dataset.enter];
+      if (fn) { ev.preventDefault(); fn(el, sheetOf(el)); }
+    }
   });
+  /** 文字に合わせて高さが伸びる入力欄（タスク名・説明） */
+  function grow(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+  function growAll(root) { (root || document).querySelectorAll('textarea[data-grow]').forEach(grow); }
+  document.addEventListener('input', (ev) => { if (ev.target.matches && ev.target.matches('textarea[data-grow]')) grow(ev.target); });
 
   let toastTimer = null;
   function toast(msg, action, kind) {
