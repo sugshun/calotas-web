@@ -1993,8 +1993,11 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
    * 1日分だけならその日を丸ごと置き換え、ヘルスケアで消した食事も消す。
    * 複数日なら、いちばん古い日は途中からの可能性があるので追加だけにし、それ以降の日は置き換える。
    * 食事の所属日は記録時刻と締め時刻から決める。手動の食事には触れない（仕様C-37）。
+   * range（{ from, to }：暦の日）を渡したとき（iPhoneアプリがヘルスケアを直接読んだとき）は、
+   * その範囲の日をすべて丸ごと置き換える。記録が1件もない日も「ヘルスケアで消した」として消す。範囲外の記録は使わない。
    */
-  function healthImport(data, items, closeTime, now) {
+  function healthImport(data, items, closeTime, now, range) {
+    if (range) items = items.filter((it) => it.at.slice(0, 10) >= range.from && it.at.slice(0, 10) <= range.to);
     const seen = {};
     const inc = items.map((it) => {
       const base = it.at + '|' + it.kcal + '|' + (it.src || '');
@@ -2006,9 +2009,11 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       return { extId: 'hk:' + base + '#' + seen[base], at: it.at, date: logicalDate(dt, closeTime), time: p[1], kcal: it.kcal, src: it.src || '' };
     });
     const days = Array.from(new Set(inc.map((x) => x.at.slice(0, 10)))).sort();
-    const first = days[0];
-    const last = days[days.length - 1];
-    const covered = (cd) => (days.length === 1 ? cd === first : days.length > 1 && cd > first && cd <= last);
+    const first = range ? range.from : days[0];
+    const last = range ? range.to : days[days.length - 1];
+    const covered = range
+      ? (cd) => cd >= range.from && cd <= range.to
+      : (cd) => (days.length === 1 ? cd === first : days.length > 1 && cd > first && cd <= last);
     const incIds = new Set(inc.map((x) => x.extId));
     const have = new Set();
     const meals = [], removed = [], added = [];
@@ -2360,6 +2365,87 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       setTimeout(() => { if (Kb.h && !isField(document.activeElement)) Kb.set(0); }, 600);
     });
   }
+  /**
+   * ヘルスケア（HealthKit）から「摂取エネルギー」を直接読み取って、食事に取り込む（iPhoneアプリだけ）。
+   * 直近7日分を、アプリを開いたとき・アプリに戻ったとき・「取り込む」を押したときに読む。
+   * その7日はヘルスケアの内容で丸ごと置き換える（消した食事は消え、直した食事は直る）。手動の食事には触れない。
+   */
+  const HealthKit = {
+    DAYS: 7,
+    busy: false,
+    lastAuto: 0,
+    /** 読み取りの許可をたずねる（一度答えたあとは、何も表示されない） */
+    async authorize() {
+      const a = await Native.call('Health', 'isAvailable');
+      if (a && a.available === false) throw new Error('unavailable');
+      await Native.call('Health', 'requestAuthorization', { read: ['dietaryEnergyConsumed'], write: [] });
+    },
+    /** 読む範囲：今日を含む直近7日（暦の日。0時から） */
+    range() {
+      const now = new Date();
+      const to = E.ymd(now);
+      const from = E.addDays(to, -(this.DAYS - 1));
+      const f = from.split('-');
+      return { from, to, start: new Date(+f[0], +f[1] - 1, +f[2], 0, 0, 0), end: new Date(now.getTime() + 60000) };
+    },
+    async read(rg) {
+      const r = await Native.call('Health', 'readSamples', {
+        dataType: 'dietaryEnergyConsumed', startDate: rg.start.toISOString(), endDate: rg.end.toISOString(), limit: 5000, ascending: true,
+      });
+      const p2 = (n) => String(n).padStart(2, '0');
+      const items = [];
+      for (const x of (r && r.samples) || []) {
+        const dt = new Date(x.startDate);
+        let v = Number(x.value);
+        if (x.unit === 'kilojoule') v *= 0.239006;
+        if (isNaN(dt.getTime()) || !(v >= 0.5 && v < 20000)) continue;
+        items.push({ at: E.ymd(dt) + 'T' + p2(dt.getHours()) + ':' + p2(dt.getMinutes()), kcal: Math.round(v), src: String(x.sourceName || '').replace(/\s+/g, ' ').trim().slice(0, 40) });
+      }
+      items.sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0));
+      return items;
+    },
+    /** 取り込む。manual：ボタンから（結果をかならず知らせる）。自動は1分に1回まで */
+    async run(manual) {
+      if (!Native.on || !App.data || App.sample || !healthMode() || this.busy) return;
+      if (!manual && Date.now() - this.lastAuto < 60000) return;
+      this.busy = true;
+      if (!manual) this.lastAuto = Date.now();
+      refreshHealthUi();
+      try {
+        await this.authorize();
+        // ログイン中は、先にほかの端末の変更を受け取る（古い記録に取り込んで、上書きしないように）
+        if (Account.st && Account.usable()) { try { await Sync.run(); } catch (e) { /* 取り込みは続ける */ } }
+        if (!App.data || App.sample || !healthMode()) return;
+        const rg = this.range();
+        const items = await this.read(rg);
+        if (!items.length) {
+          // 1件もないときは、読み取りが許可されていない可能性がある。取り込んだ食事は消さない
+          if (manual) toast('ヘルスケアに直近' + this.DAYS + '日の食事の記録が見つかりませんでした。読み出しが許可されているか確認してください');
+          return;
+        }
+        const r = E.healthImport(flat(), items, closeTime(), Date.now(), { from: rg.from, to: rg.to });
+        const keys = replaceMeals(r.meals, r.added.concat(r.removed));
+        const ext = App.data.core.ext;
+        const firstToday = !importedToday();
+        ext.lastSyncAt = Date.now();
+        ext.lastCount = r.count;
+        if (keys.length || firstToday || manual) commit(['core'].concat(keys));
+        if (r.added.length && !r.removed.length) toast('ヘルスケアから食事を' + r.added.length + '件取り込みました');
+        else if (r.added.length || r.removed.length) toast('ヘルスケアの変更を反映しました（追加 ' + r.added.length + '件・削除 ' + r.removed.length + '件）');
+        else if (manual) toast('新しい食事はありませんでした');
+      } catch (e) {
+        if (manual) {
+          toast(String((e && e.message) || '') === 'unavailable'
+            ? 'このiPhoneではヘルスケアを使えません'
+            : 'ヘルスケアから読み取れませんでした。少し待ってから、もう一度お試しください');
+        }
+      } finally {
+        this.busy = false;
+        refreshHealthUi();
+      }
+    },
+  };
+
   function notifyDeniedHint() {
     if (!Native.on || Notify.state !== 'denied') return '';
     return '<p class="hint bad">iPhoneの通知がオフになっています。「設定」アプリの「通知」→「カロタス」で、通知を許可してください。</p>';
@@ -2968,8 +3054,50 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   }
   function healthLine() {
     const ext = App.data.core.ext;
-    return '<div class="sync-line"><span><span class="dot' + (importedToday() ? '' : ' warn') + '"></span>ヘルスケア ・ ' +
-      (ext.lastSyncAt ? '最終取り込み ' + clockLabel(ext.lastSyncAt) : 'まだ取り込んでいません') + '</span><button class="btn-s" data-act="hkOpen">取り込む</button></div>';
+    const busy = Native.on && HealthKit.busy;
+    const text = busy ? 'ヘルスケアから読み取り中…' : 'ヘルスケア ・ ' + (ext.lastSyncAt ? '最終取り込み ' + clockLabel(ext.lastSyncAt) : 'まだ取り込んでいません');
+    return '<div class="sync-line" id="hk-line"><span><span class="dot' + (busy ? ' busy' : importedToday() ? '' : ' warn') + '"></span>' + text + '</span>' +
+      '<button class="btn-s" data-act="' + (Native.on ? 'hkNow' : 'hkOpen') + '"' + (busy ? ' disabled' : '') + '>取り込む</button></div>';
+  }
+  /** 設定：ヘルスケア連携。iPhoneアプリは直接読み取り、Webはショートカットで貼り付け */
+  function healthSettingsSection(core) {
+    let html = '<section class="set-group" id="hk-sec"><h3>ヘルスケア連携</h3><div class="set-card">';
+    if (isDemo()) {
+      html += '<div class="set-row"><div><b>ヘルスケア（デモ）</b><p class="hint">サンプル用の模擬データ（記録元の例：カロミル）と同期しています。実際のヘルスケアとはつながっていません。</p></div><button class="btn-s" data-act="sync">同期</button></div>' +
+        '<div class="set-row"><div><b>通信できない状態を試す</b><p class="hint">同期に失敗しても前回のデータを保ち、手動で入力できることを確認できます。</p></div><button class="switch" role="switch" aria-checked="' + !!core.ext.offline + '" data-act="offlineToggle" aria-label="通信できない状態を試す"></button></div>';
+    } else {
+      const on = healthMode();
+      html += '<div class="set-row"><div><b>ヘルスケアから食事を取り込む</b><p class="hint">' + (Native.on
+        ? 'カロミルなど、ヘルスケアに「摂取エネルギー」を書き出すアプリの記録を、アプリを開くたびに取り込みます（直近' + HealthKit.DAYS + '日分）。'
+        : 'カロミルなど、ヘルスケアに「摂取エネルギー」を書き出すアプリの記録を取り込みます。') + '</p></div>' +
+        '<button class="switch" role="switch" aria-checked="' + on + '" data-act="hkToggle" aria-label="ヘルスケアから食事を取り込む"></button></div>';
+      if (on) {
+        const busy = Native.on && HealthKit.busy;
+        html += '<div class="set-row"><div><b>最終取り込み</b><p class="hint">' + (busy ? '読み取り中…' : core.ext.lastSyncAt ? clockLabel(core.ext.lastSyncAt) + '（' + (core.ext.lastCount || 0) + '件）' : 'まだ取り込んでいません') + '</p></div>' +
+          '<button class="btn-s" data-act="' + (Native.on ? 'hkNow' : 'hkOpen') + '"' + (busy ? ' disabled' : '') + '>今すぐ取り込む</button></div>';
+      }
+    }
+    html += '</div><p class="hint">' + (!Native.on
+      ? 'Webページからはヘルスケアを直接読めません。iPhoneアプリを開くと自動で取り込まれ、ここにも反映されます。Webで取り込みたいときは、iPhoneの「ショートカット」アプリでコピーして貼り付けます。'
+      : isDemo()
+        ? '自分の設定で始めると、iPhoneのヘルスケアから食事を直接取り込めます。'
+        : 'ヘルスケアで消したり直したりした食事も、次に取り込むときに反映されます。手動で追加した食事はそのまま残ります。食事が入らないときは、ヘルスケアアプリのプロフィール画面（右上のアイコン）から、カロタスに「摂取エネルギー」の読み出しを許可してください。') + '</p></section>';
+    return html;
+  }
+  /** 取り込みの途中や終わったときに、開いている設定と食事欄の表示だけを新しくする */
+  function refreshHealthUi() {
+    const sec = document.getElementById('hk-sec');
+    if (sec && App.data) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = healthSettingsSection(App.data.core);
+      if (tmp.firstChild) sec.replaceWith(tmp.firstChild);
+    }
+    const line = document.getElementById('hk-line');
+    if (line && App.data && healthMode()) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = healthLine();
+      if (tmp.firstChild) line.replaceWith(tmp.firstChild);
+    }
   }
   const SHORTCUT_HOWTO = '<ol class="howto">' +
     '<li>iPhoneの「ショートカット」アプリを開き、右上の「＋」で新しいショートカットを作ります。</li>' +
@@ -3461,21 +3589,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
           '</div><p class="hint">' + (Native.on
             ? '指定した時刻に、iPhoneの通知でもお知らせします。'
             : 'Web版はアプリを開いたときにお知らせします。スマホのプッシュ通知はiOSアプリ版で対応します。') + '</p>' + notifyDeniedHint() + '</section>';
-        html += '<section class="set-group"><h3>ヘルスケア連携</h3><div class="set-card">';
-        if (isDemo()) {
-          html += '<div class="set-row"><div><b>ヘルスケア（デモ）</b><p class="hint">サンプル用の模擬データ（記録元の例：カロミル）と同期しています。実際のヘルスケアとはつながっていません。</p></div><button class="btn-s" data-act="sync">同期</button></div>' +
-            '<div class="set-row"><div><b>通信できない状態を試す</b><p class="hint">同期に失敗しても前回のデータを保ち、手動で入力できることを確認できます。</p></div><button class="switch" role="switch" aria-checked="' + !!core.ext.offline + '" data-act="offlineToggle" aria-label="通信できない状態を試す"></button></div>';
-        } else {
-          const on = healthMode();
-          html += '<div class="set-row"><div><b>ヘルスケアから食事を取り込む</b><p class="hint">カロミルなど、ヘルスケアに「摂取エネルギー」を書き出すアプリの記録を取り込みます。</p></div>' +
-            '<button class="switch" role="switch" aria-checked="' + on + '" data-act="hkToggle" aria-label="ヘルスケアから食事を取り込む"></button></div>';
-          if (on) {
-            html += '<div class="set-row"><div><b>最終取り込み</b><p class="hint">' + (core.ext.lastSyncAt ? clockLabel(core.ext.lastSyncAt) + '（' + (core.ext.lastCount || 0) + '件）' : 'まだ取り込んでいません') + '</p></div><button class="btn-s" data-act="hkOpen">取り込む</button></div>';
-          }
-        }
-        html += '</div><p class="hint">' + (Native.on
-          ? 'いまはiPhoneの「ショートカット」アプリでコピーして、このアプリに貼り付けます。ヘルスケアから直接読み取る機能は、今後のアップデートで追加する予定です。'
-          : 'Webページからはヘルスケアを直接読めないため、iPhoneの「ショートカット」アプリでコピーして、このアプリに貼り付けます。iOSアプリ版なら直接読み取れます。') + '</p></section>';
+        html += healthSettingsSection(core);
         html += todoSettingsSection();
         html += accountSection();
         html += '<section class="set-group"><h3>データ</h3><div class="set-card"><div class="set-row"><div><b>保存先</b><p class="hint">' + storeLabel() + '</p></div></div>';
@@ -6530,6 +6644,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     pbMore(el, sh) { sh.params.limit = (sh.params.limit || 30) + 30; fillSheet(sh); },
     sync() { runSync(false); },
     hkOpen() { openSheet('health', {}); },
+    hkNow() { HealthKit.run(true); },
     hkApply(el, sh) {
       const p = sh.params;
       if (!p.items || !p.items.length) return;
@@ -6549,7 +6664,9 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       ext.mode = ext.mode === 'health' ? 'none' : 'health';
       commit(['core']);
       if (sh) fillSheet(sh);
-      if (ext.mode === 'health') toast('「カロリー」タブの食事欄の「取り込む」から使えます');
+      if (ext.mode !== 'health') return;
+      if (Native.on) HealthKit.run(true); // 読み取りの許可をたずねて、すぐ取り込む
+      else toast('「カロリー」タブの食事欄の「取り込む」から使えます');
     },
     offlineToggle(el, sh) {
       const ext = App.data.core.ext;
@@ -6933,6 +7050,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     started();
     await Account.load();
     Sync.start();
+    HealthKit.run(false); // ヘルスケアから食事を取り込む（ログイン中は、先にほかの端末の変更を受け取ってから）
   }
   function loadSaved(saved) {
     const data = { core: normalizeCore(saved.core), months: {}, todo: normalizeTodo(saved.todo), comps: {}, logins: {} };
@@ -6967,6 +7085,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       claimLogin();
       Notify.soon();
       Sync.soon(300);
+      HealthKit.run(false);
     });
     window.addEventListener('pagehide', () => { Store.flushNow(); if (Account.st) Account.writeNow(); });
     window.addEventListener('online', () => Sync.soon(300));
