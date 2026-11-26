@@ -2006,7 +2006,11 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       const dp = p[0].split('-');
       const tp = p[1].split(':');
       const dt = new Date(+dp[0], +dp[1] - 1, +dp[2], +tp[0], +tp[1]);
-      return { extId: 'hk:' + base + '#' + seen[base], at: it.at, date: logicalDate(dt, closeTime), time: p[1], kcal: it.kcal, src: it.src || '' };
+      // 0:00 ちょうどの記録（1日分の合計を、その日の0:00として書き込むアプリがある）と、
+      // 長い時間にまたがる記録（it.day）は、締め時刻に関係なく、その日（暦の日）の分にする
+      const date = it.day || (p[1] === '00:00' ? p[0] : logicalDate(dt, closeTime));
+      // 長い時間にまたがる記録は、時刻を出さない（始まりの時刻が前の日のこともある）
+      return { extId: 'hk:' + base + '#' + seen[base], at: it.at, date, time: it.day ? '' : p[1], kcal: it.kcal, src: it.src || '' };
     });
     const days = Array.from(new Set(inc.map((x) => x.at.slice(0, 10)))).sort();
     const first = range ? range.from : days[0];
@@ -2014,13 +2018,17 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     const covered = range
       ? (cd) => cd >= range.from && cd <= range.to
       : (cd) => (days.length === 1 ? cd === first : days.length > 1 && cd > first && cd <= last);
-    const incIds = new Set(inc.map((x) => x.extId));
+    const incById = new Map(inc.map((x) => [x.extId, x]));
     const have = new Set();
     const meals = [], removed = [], added = [];
+    let moved = 0;
     for (const m of data.meals) {
       if (m.source === 'external') {
         const at = m.at || (m.date + 'T' + (m.time || '12:00'));
-        if (covered(at.slice(0, 10)) && !incIds.has(m.extId)) { removed.push(m); continue; }
+        const x = incById.get(m.extId);
+        if (covered(at.slice(0, 10)) && !x) { removed.push(m); continue; }
+        // 同じ記録でも所属日が変わった（締め時刻の変更や、0:00の記録の扱い）→ 正しい日に入れ直す
+        if (x && x.date !== m.date) { removed.push(m); moved++; continue; }
         if (m.extId) have.add(m.extId);
       }
       meals.push(m);
@@ -2033,7 +2041,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       meals.push(nm);
     });
     return {
-      meals, added, removed, first, last, days: days.length,
+      meals, added, removed, moved, first, last, days: days.length,
       count: inc.length, total: inc.reduce((s, x) => s + x.kcal, 0),
       sources: Array.from(new Set(inc.map((x) => x.src).filter(Boolean))),
     };
@@ -2396,10 +2404,14 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       const items = [];
       for (const x of (r && r.samples) || []) {
         const dt = new Date(x.startDate);
+        const en = new Date(x.endDate || x.startDate);
         let v = Number(x.value);
         if (x.unit === 'kilojoule') v *= 0.239006;
         if (isNaN(dt.getTime()) || !(v >= 0.5 && v < 20000)) continue;
-        items.push({ at: E.ymd(dt) + 'T' + p2(dt.getHours()) + ':' + p2(dt.getMinutes()), kcal: Math.round(v), src: String(x.sourceName || '').replace(/\s+/g, ' ').trim().slice(0, 40) });
+        const it = { at: E.ymd(dt) + 'T' + p2(dt.getHours()) + ':' + p2(dt.getMinutes()), kcal: Math.round(v), src: String(x.sourceName || '').replace(/\s+/g, ' ').trim().slice(0, 40) };
+        // 3時間以上にまたがる記録（1日分の合計など）は、ヘルスケアと同じく、時間の大半がある日の分にする
+        if (!isNaN(en.getTime()) && en - dt >= 3 * 3600000) it.day = E.ymd(new Date((dt.getTime() + en.getTime()) / 2));
+        items.push(it);
       }
       items.sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0));
       return items;
@@ -2430,9 +2442,17 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         ext.lastSyncAt = Date.now();
         ext.lastCount = r.count;
         if (keys.length || firstToday || manual) commit(['core'].concat(keys));
-        if (r.added.length && !r.removed.length) toast('ヘルスケアから食事を' + r.added.length + '件取り込みました');
-        else if (r.added.length || r.removed.length) toast('ヘルスケアの変更を反映しました（追加 ' + r.added.length + '件・削除 ' + r.removed.length + '件）');
-        else if (manual) toast('新しい食事はありませんでした');
+        const mv = r.moved || 0;
+        const add = r.added.length - mv;
+        const del = r.removed.length - mv;
+        if (add && !del && !mv) toast('ヘルスケアから食事を' + add + '件取り込みました');
+        else if (add || del || mv) {
+          const parts = [];
+          if (add) parts.push('追加 ' + add + '件');
+          if (del) parts.push('削除 ' + del + '件');
+          if (mv) parts.push('日付の修正 ' + mv + '件');
+          toast('ヘルスケアの変更を反映しました（' + parts.join('・') + '）');
+        } else if (manual) toast('新しい食事はありませんでした');
       } catch (e) {
         if (manual) {
           toast(String((e && e.message) || '') === 'unavailable'
@@ -3016,7 +3036,12 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   }
 
   function mealsCard(c, d, t, L) {
-    const meals = c.mealsOn(d);
+    // 食べた時刻の順（締め時刻より前の夜中の記録は、その日の最後）。
+    // 時刻のない記録と、ヘルスケアの 0:00 ちょうどの記録（1日分の合計など。その日の分として扱う）は先頭
+    const toMin = (hm) => { const p = String(hm).split(':'); return +p[0] * 60 + +p[1]; };
+    const cm = toMin(closeTime());
+    const key = (m) => (!m.time || (m.source === 'external' && m.time === '00:00') ? -1 : (toMin(m.time) - cm + 1440) % 1440);
+    const meals = c.mealsOn(d).slice().sort((a, b) => key(a) - key(b));
     const open = App.ui.mealsOpen;
     let html = '<section class="card meals" aria-labelledby="h-meals"><button class="meals-head" data-act="toggleMeals" aria-expanded="' + open + '" aria-controls="meal-list">' +
       '<h2 id="h-meals">食事</h2><span class="cnt">' + meals.length + '件</span><span class="tot">' + fmt(L.M) + '<small>kcal</small></span>' + IC.down + '</button>';
@@ -3081,7 +3106,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       ? 'Webページからはヘルスケアを直接読めません。iPhoneアプリを開くと自動で取り込まれ、ここにも反映されます。Webで取り込みたいときは、iPhoneの「ショートカット」アプリでコピーして貼り付けます。'
       : isDemo()
         ? '自分の設定で始めると、iPhoneのヘルスケアから食事を直接取り込めます。'
-        : 'ヘルスケアで消したり直したりした食事も、次に取り込むときに反映されます。手動で追加した食事はそのまま残ります。食事が入らないときは、ヘルスケアアプリのプロフィール画面（右上のアイコン）から、カロタスに「摂取エネルギー」の読み出しを許可してください。') + '</p></section>';
+        : 'ヘルスケアで消したり直したりした食事も、次に取り込むときに反映されます。手動で追加した食事はそのまま残ります。0:00ちょうどの記録（1日分の合計など）は、締め時刻に関係なくその日の分になります。食事が入らないときは、ヘルスケアアプリのプロフィール画面（右上のアイコン）から、カロタスに「摂取エネルギー」の読み出しを許可してください。') + '</p></section>';
     return html;
   }
   /** 取り込みの途中や終わったときに、開いている設定と食事欄の表示だけを新しくする */
@@ -3123,8 +3148,9 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     p.items = parsed.items;
     p.res = r;
     const range = r.first === r.last ? dateLabel(r.first) : shortDate(r.first) + '〜' + shortDate(r.last);
-    let h = '<div class="note-box hk-sum"><b>' + range + ' の ' + r.count + '件（合計 ' + fmt(r.total) + ' kcal）</b><br>追加 ' + r.added.length + '件 ・ 削除 ' + r.removed.length +
-      '件 ・ 取り込み済み ' + (r.count - r.added.length) + '件' + (r.sources.length ? '<br>記録元：' + esc(r.sources.join('、')) : '') + '</div>';
+    const mv = r.moved || 0;
+    let h = '<div class="note-box hk-sum"><b>' + range + ' の ' + r.count + '件（合計 ' + fmt(r.total) + ' kcal）</b><br>追加 ' + (r.added.length - mv) + '件 ・ 削除 ' + (r.removed.length - mv) +
+      '件' + (mv ? ' ・ 日付の修正 ' + mv + '件' : '') + ' ・ 取り込み済み ' + (r.count - r.added.length) + '件' + (r.sources.length ? '<br>記録元：' + esc(r.sources.join('、')) : '') + '</div>';
     if (r.days > 1) h += '<p class="hint">いちばん古い日（' + shortDate(r.first) + '）は途中からの記録かもしれないため、追加だけ行います。</p>';
     if (parsed.bad.length) h += '<p class="hint bad">読み取れない行が ' + parsed.bad.length + ' 行ありました（例：' + esc(parsed.bad[0].slice(0, 40)) + '）。</p>';
     return h;
@@ -6655,8 +6681,9 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       ext.lastCount = r.count;
       closeSheet(sh.id);
       commit(['core'].concat(keys));
+      const mv = r.moved || 0;
       toast(r.added.length || r.removed.length
-        ? 'ヘルスケアから取り込みました（追加 ' + r.added.length + '件・削除 ' + r.removed.length + '件）'
+        ? 'ヘルスケアから取り込みました（追加 ' + (r.added.length - mv) + '件・削除 ' + (r.removed.length - mv) + '件' + (mv ? '・日付の修正 ' + mv + '件' : '') + '）'
         : '新しい食事はありませんでした');
     },
     hkToggle(el, sh) {
