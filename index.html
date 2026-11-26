@@ -733,6 +733,10 @@ details.more[open] summary::before { content: "− "; }
 .cal-cell.r3 .cd { background: var(--shu); color: #fff; }
 .cal-cell.out { opacity: 0.3; }
 .cal-cell.fut { color: var(--ink-3); }
+.cal-cell.pre { opacity: 0.35; } /* 記録の開始日より前 */
+.set-row.set-from { flex-wrap: wrap; }
+.from-form { display: flex; gap: 8px; align-items: center; }
+.from-form .input { width: auto; min-width: 150px; }
 .cal-cell.sel .cd { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--ink); }
 .sheet .cal-cell.sel .cd { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); }
 .cal-cell.r0.sel .cd { box-shadow: inset 0 0 0 1px var(--line-2), 0 0 0 2px var(--bg), 0 0 0 4px var(--ink); }
@@ -1237,16 +1241,20 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     return (a.ts || 0) - (b.ts || 0);
   }
   function buildIndex(data) {
+    // 記録の開始日（core.countFrom）より前の記録は数えない。消さずに残しておき、開始日を戻せばまた数える
+    const from = data.core.countFrom || '';
+    const counts = (d) => !from || d >= from;
     const entriesByDate = new Map();
     const entriesByHD = new Map();
     const mealsByDate = new Map();
     for (const e of data.entries) {
+      if (!counts(e.date)) continue;
       push(entriesByDate, e.date, e);
       push(entriesByHD, e.habitId + '|' + e.date, e);
     }
-    for (const m of data.meals) push(mealsByDate, m.date, m);
+    for (const m of data.meals) if (counts(m.date)) push(mealsByDate, m.date, m);
     const compsByDate = new Map();
-    for (const c of data.completions || []) push(compsByDate, c.date, c);
+    for (const c of data.completions || []) if (counts(c.date)) push(compsByDate, c.date, c);
     for (const l of entriesByHD.values()) l.sort(byTs);
     for (const l of entriesByDate.values()) l.sort(byTs);
     for (const l of mealsByDate.values()) l.sort(mealOrder);
@@ -1268,14 +1276,20 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
    *     食事データがなく未確認の日は精算を保留（A-14）
    *  ログインボーナス（設定の login）：その日にアプリを開いた日だけ、基本カロリーが入る。開かなかった日は 0
    *  過去の修正で、すでに引き出した分の元手が足りなくなったときは残高がマイナスになる（A-12）
+   *  借金あり（設定の debt）：精算した日に、貯金でも埋めきれなかった食事の超過分 B を貯金から引く（残高がマイナスになる）。
+   *     毎日の予算は減らさない。借金は、そのあと貯金に入る分（上限超過の報酬・使わなかった報酬）で返していく
+   *  記録の開始日（core.countFrom）があれば、その日から数える
    */
   function computeLedger(data, idx, today) {
     const core = data.core;
-    let start = minDate(core.startDate, core.settings.history[0].from);
-    for (const d of idx.entriesByDate.keys()) start = minDate(start, d);
-    for (const d of idx.mealsByDate.keys()) start = minDate(start, d);
-    for (const d of idx.compsByDate.keys()) start = minDate(start, d);
-    for (const d in data.withdrawals) if (data.withdrawals[d] > 0) start = minDate(start, d);
+    let start = core.countFrom || '';
+    if (!start) {
+      start = minDate(core.startDate, core.settings.history[0].from);
+      for (const d of idx.entriesByDate.keys()) start = minDate(start, d);
+      for (const d of idx.mealsByDate.keys()) start = minDate(start, d);
+      for (const d of idx.compsByDate.keys()) start = minDate(start, d);
+      for (const d in data.withdrawals) if (data.withdrawals[d] > 0) start = minDate(start, d);
+    }
     if (!start || start > today) start = today;
     const days = {};
     const order = [];
@@ -1319,11 +1333,13 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       const unusedW = W - Math.min(W, Math.max(0, beyondBase - Rin));
       const closed = d < today;
       const settled = closed && (hasMeals || confirmed);
-      let D = 0, F = 0, pend = 0;
+      let D = 0, F = 0, pend = 0, B = 0;
       if (settled) {
         D = unusedReward;
         F = unusedW;
         bal += D + F;
+        // 借金あり：埋めきれなかった分を貯金から引く（マイナスになる）
+        if (s.debt && remaining < 0) { B = -remaining; bal -= B; }
       } else if (closed) {
         pend = unusedReward + unusedW;
         if (pend > 0) { pending += pend; pendingDays.push(d); }
@@ -1331,7 +1347,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       days[d] = {
         date: d, base, baseSet: s.base, login, logged, cap, noCap: s.cap == null, R, Rh, Rt, Rin, X, W, A, M, over, budget, remaining,
         uncovered: Math.max(0, -remaining), hasMeals, confirmed, closed, settled,
-        unusedReward, unusedW, D, F, pend, balStart, balBeforeW, balEnd: bal,
+        unusedReward, unusedW, D, F, B, debt: !!s.debt, pend, balStart, balBeforeW, balEnd: bal,
         mealCount: meals.length, entryCount: ents.length, compCount: comps.length,
       };
       order.push(d);
@@ -1346,7 +1362,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     return {
       date, base, baseSet: s.base, login: !!s.login, logged: !s.login, cap: capOf(s), noCap: s.cap == null, R: 0, Rh: 0, Rt: 0, Rin: 0, X: 0, W: 0, A: 0, M: 0, over: 0, compCount: 0,
       budget: base, remaining: base, uncovered: 0, hasMeals: false, confirmed: false,
-      closed: date < today, settled: false, unusedReward: 0, unusedW: 0, D: 0, F: 0, pend: 0,
+      closed: date < today, settled: false, unusedReward: 0, unusedW: 0, D: 0, F: 0, B: 0, debt: !!s.debt, pend: 0,
       balStart: 0, balBeforeW: 0, balEnd: 0, mealCount: 0, entryCount: 0, outside: true,
     };
   }
@@ -1370,6 +1386,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     if (L.A > 0) lines.push({ key: 'A', label: '食事の超過を自動補填', amount: -L.A, kind: 'out' });
     if (L.D > 0) lines.push({ key: 'D', label: '使わなかった報酬', amount: L.D, kind: 'in' });
     if (L.F > 0) lines.push({ key: 'F', label: '引き出しの未使用分を返金', amount: L.F, kind: 'in' });
+    if (L.B > 0) lines.push({ key: 'B', label: '借金（食事の不足分）', amount: -L.B, kind: 'out' });
     if (L.pend > 0) lines.push({ key: 'P', label: '精算保留（食事が未確認）', amount: L.pend, kind: 'pending' });
     return lines;
   }
@@ -1456,6 +1473,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         let rateSum = 0, rateDays = 0, okDays = 0, judged = 0, net = 0, todoDone = 0;
         const first = ym + '-01';
         for (let d = first; monthKey(d) === ym && d <= today; d = addDays(d, 1)) {
+          if (data.core.countFrom && d < data.core.countFrom) continue; // 記録の開始日より前は数えない
           const r = this.dayRate(d);
           if (r.rate !== null) { rateSum += r.rate; rateDays++; }
           todoDone += (idx.compsByDate.get(d) || []).length;
@@ -1465,7 +1483,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
             judged++;
             if (dayStatus(L) === 'ok') okDays++;
           }
-          net += L.X + L.D + L.F - L.W - L.A;
+          net += L.X + L.D + L.F - L.W - L.A - (L.B || 0);
         }
         return { avgRate: rateDays ? rateSum / rateDays : null, okDays, judged, net, todoDone };
       },
@@ -2474,10 +2492,15 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
 
   function closeTime() { return (App.data && App.data.core.settings.closeTime) || '00:00'; }
   function today() { return E.logicalDate(new Date(), closeTime()); }
+  /** 記録の開始日（設定で決めた日。この日より前は数えない・表示しない） */
+  function firstDay() { return (App.data && !App.sample && App.data.core.countFrom) || ''; }
   function viewDate() {
     const t = today();
     const v = App.ui.viewDate;
-    return v && v < t ? v : t;
+    if (!v || v >= t) return t;
+    const f = firstDay();
+    if (f && v < f) return f < t ? f : t;
+    return v;
   }
   let flatCache = { rev: -1, v: null };
   function flat() {
@@ -2793,7 +2816,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
 
   function topbarHome(d, t) {
     return '<header class="topbar"><div class="tb-nav">' +
-      '<button class="icon-btn" data-act="day" data-n="-1" aria-label="前の日">' + IC.left + '</button>' +
+      '<button class="icon-btn" data-act="day" data-n="-1" aria-label="前の日"' + (firstDay() && d <= firstDay() ? ' disabled' : '') + '>' + IC.left + '</button>' +
       '<button class="icon-btn" data-act="day" data-n="1" aria-label="次の日"' + (d >= t ? ' disabled' : '') + '>' + IC.right + '</button>' +
       (d !== t ? '<button class="chip" data-act="goToday">今日へ</button>' : '') + '</div>' +
       '<span class="tb-title" aria-hidden="true">' + relLabel(d, t) + ' ' + shortDate(d) + '</span>' +
@@ -2933,7 +2956,11 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       if (L.D || L.F) notes.push('締めで +' + fmt(L.D + L.F) + ' kcal を貯金しました。');
       else notes.push('この日の精算は済んでいます。');
     } else if (L.pend > 0) notes.push('食事データがないため、+' + fmt(L.pend) + ' kcal の精算を保留しています。');
-    if (L.remaining < 0) notes.push('貯金が足りず、' + fmt(L.remaining) + ' kcal 不足しています。');
+    if (L.B > 0) notes.push('貯金でも足りなかった ' + fmt(L.B) + ' kcal は、借金（マイナスの貯金）になりました。');
+    else if (L.remaining < 0) {
+      notes.push('貯金が足りず、' + fmt(L.remaining) + ' kcal 不足しています。' +
+        (L.debt && !L.closed ? 'このまま締め時刻（' + hmLabel(closeTime()) + '）を過ぎると、この分は借金になります。' : ''));
+    }
     if (pot && pot.targets) {
       notes.push('「毎日・曜日指定」の習慣を全部達成すると報酬は +' + fmt(pot.targetMax) + ' kcal' +
         (pot.overCap > 0 ? '。予算に入るのは上限の ' + fmt(L.cap) + ' kcal までで、超えた分は貯金に入ります。' : '。') + '週N回の習慣と予定外の記録は含みません。');
@@ -3018,6 +3045,7 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     if (led.pending > 0) subs.push('保留 +' + fmt(led.pending));
     if (isToday && L.unusedReward + L.unusedW > 0) subs.push('締めで +' + fmt(L.unusedReward + L.unusedW) + ' 予定');
     if (!isToday) subs.push('この日の締め後 ' + numText(L.balEnd));
+    if (led.balance < 0) subs.unshift('借金 ' + fmt(-led.balance) + ' kcal（返すまで引き出せません）');
     let html = '<section class="card bank" aria-labelledby="h-bank"><div class="sec-head"><h2 id="h-bank">報酬と貯金</h2><button class="link-btn" data-act="bank">通帳' + IC.chev + '</button></div>' +
       '<div class="bank-grid"><div class="bank-cell"><span class="lbl">' + (isToday ? '今日の獲得報酬' : 'この日の獲得報酬') + '</span><span class="val gold">+' + fmt(L.R) + '<small>kcal</small></span>' +
       (L.noCap ? '' : '<div class="cap-bar" aria-hidden="true"><i style="width:' + capPct.toFixed(1) + '%"></i></div>') + '<span class="sub">' + subR + '</span></div>' +
@@ -3190,8 +3218,8 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
     for (let d = E.mondayOf(first); d <= end; d = E.addDays(d, 1)) {
       const inMonth = E.monthKey(d) === ym;
       const num = +d.slice(8);
-      if (d > t) {
-        html += '<div class="cal-cell fut' + (inMonth ? '' : ' out') + '" aria-hidden="true"><span class="cd">' + num + '</span><span class="mk" style="visibility:hidden">·</span></div>';
+      if (d > t || (firstDay() && d < firstDay())) {
+        html += '<div class="cal-cell fut' + (d > t ? '' : ' pre') + (inMonth ? '' : ' out') + '" aria-hidden="true"><span class="cd">' + num + '</span><span class="mk" style="visibility:hidden">·</span></div>';
         continue;
       }
       const r = c.dayRate(d);
@@ -3522,7 +3550,12 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
         if (L.unusedReward + L.unusedW > 0) subs.push('今日の締めで +' + fmt(L.unusedReward + L.unusedW) + ' 予定');
         subs.push('期限なし');
         let html = '<div class="pb-top"><span class="lbl">いまの残高</span><span class="val' + (led.balance < 0 ? ' neg' : '') + '">' + numText(led.balance) + '<small>kcal</small></span><span class="subs">' + subs.map((s) => '<span>' + s + '</span>').join('') + '</span></div>';
-        if (led.balance < 0) html += notice('bad', 'マイナス残高は、過去の記録の修正で引き出しの元手が足りなくなったためです。今後の報酬で解消され、それまでは引き出しできません。');
+        if (led.balance < 0) {
+          const hasDebt = led.order.some((d) => led.days[d].B > 0);
+          html += notice('bad', hasDebt
+            ? 'マイナス残高は借金です。上限を超えた報酬や、使わなかった報酬が貯金に入るたびに返していきます。返し終わるまで引き出しはできません。'
+            : 'マイナス残高は、過去の記録の修正で引き出しの元手が足りなくなったためです。今後の報酬で解消され、それまでは引き出しできません。');
+        }
         const limit = p.limit || 30;
         const rows = [];
         let shown = 0;
@@ -3604,8 +3637,13 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
           '<div class="set-row"><div><b><label for="sf-cap">1日の報酬上限</label></b><p class="hint">その日の予算に足せる報酬の上限。超えた分は貯金' + capHint() + '</p></div><div class="unit" data-unit="kcal"><input class="input" id="sf-cap" inputmode="numeric" autocomplete="off"' + (s.cap == null ? ' value="" placeholder="なし" disabled' : ' value="' + s.cap + '"') + '></div></div>' +
           noCapRow('sf', s.cap == null) +
           '<div class="set-row"><p class="hint bad" id="sf-err" role="alert" style="margin:0"></p><button class="btn primary" type="submit">今日から適用</button></div></form>';
-        html += '<ul class="hist-list">' + core.settings.history.slice().reverse().map((x) => '<li><span>' + shortDate(x.from) + ' から</span><span>基本 ' + fmt(x.base) + (x.login ? '（ログイン）' : '') + ' ・ ' + (x.cap == null ? '上限なし' : '上限 ' + fmt(x.cap)) + '</span></li>').join('') + '</ul>';
+        html += '<ul class="hist-list">' + core.settings.history.slice().reverse().map((x) => '<li><span>' + shortDate(x.from) + ' から</span><span>基本 ' + fmt(x.base) + (x.login ? '（ログイン）' : '') + ' ・ ' + (x.cap == null ? '上限なし' : '上限 ' + fmt(x.cap)) + (x.debt ? ' ・ 借金あり' : '') + '</span></li>').join('') + '</ul>';
         html += '<p class="hint">変更は今日から反映され、過去の日の計算はそのまま残ります。</p></section>';
+        const debtNow = ctx().ledger.balance < 0 ? -ctx().ledger.balance : 0;
+        html += '<section class="set-group" id="debt-sec"><h3>借金</h3><div class="set-card"><div class="set-row"><div><b id="sf-debt-l">借金あり</b>' +
+          '<p class="hint">オンにすると、食事が予算を超えて貯金でも埋めきれなかった分は、締め時刻に借金（マイナスの貯金）になります。借金は、そのあと貯金に入る報酬（上限を超えた分・使わなかった分）で返していきます。返し終わるまで引き出しはできません。毎日の予算は減りません。</p></div>' +
+          '<button class="switch" role="switch" aria-checked="' + !!s.debt + '" aria-labelledby="sf-debt-l" data-act="debtToggle"></button></div></div>' +
+          '<p class="hint">オン・オフは今日の分から反映されます。オフにしても、それまでの借金は返し終わるまで残ります。' + (debtNow ? 'いまの借金：' + fmt(debtNow) + ' kcal' : '') + '</p></section>';
         html += '<section class="set-group"><h3>1日の区切り</h3><div class="set-card"><div class="set-row"><div><b><label for="sf-close">日次締め時刻</label></b><p class="hint">この時刻までの記録は前日分になります。使わなかった報酬の貯金と、引き出しの返金もこの時刻に行います。初期値は 0:00。</p></div>' +
           '<select class="input" id="sf-close" data-change="closeTime">' + closeOptions(core.settings.closeTime) + '</select></div></div></section>';
         const rem = Object.assign({ enabled: false, time: '21:00' }, core.settings.reminder);
@@ -3623,6 +3661,8 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
           html += '<div class="set-row"><div><b>自分の設定で始める</b><p class="hint">基本カロリーと報酬上限を決めて、空の状態から始めます。</p></div><button class="btn-s" data-act="startOwn">始める</button></div>' +
             '<div class="set-row"><div><b>バックアップから戻す</b><p class="hint">以前書き出したファイルがあれば読み込めます。</p></div><button class="btn-s" data-act="backup">開く</button></div>';
         } else {
+          html += '<div class="set-row set-from"><div><b><label for="sf-from">記録の開始日</label></b><p class="hint">この日より前の記録（習慣の記録・食事・ToDoの報酬・貯金）は数えません。習慣とToDoのタスクはそのまま残ります。テスト期間の記録を外したいときに使います。</p></div>' +
+            '<form class="from-form" data-form="countFrom" novalidate><input type="date" class="input" id="sf-from" value="' + (core.countFrom || core.startDate || '') + '" max="' + t + '"><button class="btn-s" type="submit">変更</button></form></div>';
           html += '<div class="set-row"><div><b>バックアップ</b><p class="hint">すべての記録をファイルに書き出したり、書き出したファイルから戻したりできます。</p></div><button class="btn-s" data-act="backup">開く</button></div>' +
             '<div class="set-row"><div><b>すべてのデータを消去</b><p class="hint">習慣・記録・貯金をすべて消して、最初からやり直します。</p></div><button class="btn-s" data-act="resetAll" style="color:var(--shu)">消去</button></div>';
         }
@@ -6759,6 +6799,14 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
       });
     },
     startOwn() { openSheet('setup', {}); },
+    debtToggle(el, sh) {
+      const core = App.data.core;
+      const on = !E.settingsAt(core, today()).debt;
+      core.settings.history = E.pushDated(core.settings.history, today(), { debt: on });
+      commit(['core']);
+      if (sh) fillSheet(sh);
+      toast(on ? '借金ありにしました（今日の分から）' : '借金なしにしました（今日の分から）');
+    },
     confirmOk(el, sh) {
       const fn = sh.params.onOk;
       closeSheet(sh.id);
@@ -6767,6 +6815,24 @@ html.app .boot { padding-top: calc(40px + env(safe-area-inset-top)); }
   };
 
   const FORMS = {
+    countFrom(form, sh) {
+      const v = form.querySelector('#sf-from').value;
+      const core = App.data.core;
+      if (!E.isValidYmd(v) || v > today()) { toast('今日までの日付を選んでください'); return; }
+      if (v === (core.countFrom || '')) { toast('すでにこの日から数えています'); return; }
+      confirmDialog({
+        title: '記録の開始日を' + dateLabel(v) + 'にしますか？',
+        body: 'この日より前の習慣の記録・食事・ToDoの報酬・貯金は数えません。消さずに残しているので、開始日を戻せばまた数えます。習慣とToDoのタスクはそのまま残ります。',
+        ok: '変更する',
+        onOk: () => {
+          core.countFrom = v;
+          App.ui.viewDate = null;
+          commit(['core']);
+          if (sh) fillSheet(sh);
+          toast('記録の開始日を' + shortDate(v) + 'にしました');
+        },
+      });
+    },
     habit(form, sh) {
       const f = readHabitForm(sh);
       const err = (m) => { form.querySelector('#hf-err').textContent = m; };
